@@ -120,6 +120,8 @@
 
     private void HandleGameEvent(IGameEvent e)
     {
+        if (e.GameId != GameId) return;
+        
         if (e is GameReset) _myVote = null;
         
         _game.Handle(e);
