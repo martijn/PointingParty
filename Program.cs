@@ -14,12 +14,8 @@ builder.Services.AddMassTransit(x =>
     x.SetKebabCaseEndpointNameFormatter();
     x.SetInMemorySagaRepositoryProvider();
 
-    var entryAssembly = Assembly.GetEntryAssembly();
-
-    x.AddConsumers(entryAssembly);
-    x.AddSagaStateMachines(entryAssembly);
-    x.AddSagas(entryAssembly);
-    x.AddActivities(entryAssembly);
+    x.AddConsumer<DebugConsumer>();
+    x.AddConsumer<EventHub>();
 
     x.UsingInMemory((context, cfg) => { cfg.ConfigureEndpoints(context); });
 });

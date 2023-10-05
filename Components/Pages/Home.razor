@@ -1,17 +1,71 @@
 ﻿@page "/"
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavManager
 
 <PageTitle>Pointing Party</PageTitle>
 
 <h2 class="text-xl my-2">Welcome to Pointing Party!</h2>
 
-<p>
-    <a href="/Game/Foo">Enter game 'Foo'</a>
-</p>
-<p>
-    <a href="/Game/Bar">Enter game 'Bar'</a>
+<p class="mb-2">
+    This Blazor-powered tool can help story point estimation sessions. Choose a name for the game below
+    and click the start button. You can share the link to the game with other participants afterward.
 </p>
 
+<div class="mb-2">
+    <EditForm Model="Model" OnValidSubmit="StartGame" FormName="NewGame">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <div class="my-2">
+            <label>
+                <span class="text-xs font-medium text-gray-500 uppercase">
+                    Game name:
+                </span>
+                <InputText @bind-Value="Model.GameId" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400" />
+            </label>
+        </div>
+        <!--
+        <div>
+            <label>
+                Your name:
+                <InputText @bind-Value="Model.PlayerName" />
+            </label>
+        </div>
+        -->
+        <div>
+            <FatButton type="submit">Start a new game</FatButton>
+        </div>
+    </EditForm>
+</div>
+
+
+<p>
+    Or, join the demo game
+    <a href="/Game/Demo%20One" class="text-gray-800 dark:text-gray-400">'Demo One'</a>
+    or
+    <a href="/Game/Demo%20Two" class="text-gray-800 dark:text-gray-400">'Demo Two'</a>.
+</p>
 
 @code {
+
+    class NewGameModel
+    {
+        [Required]
+        public string GameId { get; set; }
+        public string? PlayerName { get; set; }
+    }
+    
+    [SupplyParameterFromForm]
+    NewGameModel Model { get; set; } = new();
+    
+    private void StartGame()
+    {
+        if (string.IsNullOrWhiteSpace(Model.PlayerName))
+        {
+            NavManager.NavigateTo($"/Game/{Model.GameId}", forceLoad: true);
+        }
+        else
+        {
+            NavManager.NavigateTo($"/Game/{Model.GameId}?PlayerName={Model.PlayerName}", forceLoad: true);
+        }
+    }
 
 }

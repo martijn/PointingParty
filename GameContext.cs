@@ -58,7 +58,9 @@ public sealed class GameContext : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await _bus.Publish(new PlayerLeftGame(NewId.Next(), Game!.State.GameId, _playerName));
+        if (Game is not null && _playerName is not null)
+            await _bus.Publish(new PlayerLeftGame(NewId.Next(), Game!.State.GameId, _playerName));
+        
         _logger.LogDebug("GameContext {_id}: Disposing", _id);
     }
     

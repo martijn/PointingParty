@@ -1,32 +1,42 @@
 @page "/Game/{gameId}"
 @using System.ComponentModel.DataAnnotations
+@inject IJSRuntime JSRuntime
+@attribute [RenderModeServer]
+
+<PageTitle>Pointing 🎉 @GameId</PageTitle>
 
 <h2 class="text-xl my-2">Pointing Party: @GameId</h2>
 
 @if (_inGame)
 {
     <GameUi GameId="@GameId" PlayerName="@GameAndName.Name" />
+    
+    <div class="text-center text-xs font-medium text-gray-800 dark:text-gray-400">
+        To invite participants, simply send them the link to this page!
+    </div>
 }
 else
 {
     <EditForm Model="GameAndName" OnValidSubmit="EnterGame" FormName="GameData">
         <DataAnnotationsValidator />
-        <p>
+        <div class="my-2">
             <label>
-                Name:
-                <InputText @bind-Value="GameAndName.Name" />
+                <span class="text-xs font-medium text-gray-500 uppercase">
+                    Your name:
+                </span>
+                <InputText @bind-Value="GameAndName.Name" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400" />
             </label>
-        </p>
-        <p>
-            <button type="submit">Enter game</button>
-        </p>
+        </div>
+        <div>
+            <FatButton type="submit">Enter game</FatButton>
+        </div>
     </EditForm>
 }
 
 @code {
 
     [Parameter]
-    public string GameId { get; set; }
+    public string? GameId { get; set; }
 
     private bool _inGame;
 
@@ -39,9 +49,26 @@ else
     [SupplyParameterFromForm]
     protected FormData GameAndName { get; set; } = new();
 
+    [SupplyParameterFromQuery]
+    public string? PlayerName { get; set; }
+    
     private void EnterGame()
     {
         _inGame = true;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrWhiteSpace(PlayerName)) return;
+
+        GameAndName.Name = PlayerName;
+        _inGame = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await JSRuntime.InvokeVoidAsync("window.replaceURL", $"/Game/{GameId}");
     }
 
 }
