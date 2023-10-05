@@ -6,7 +6,7 @@ public class GameAggregate
 {
     public GameAggregate(string gameId)
     {
-        State = new GameState(gameId, new Dictionary<string, double?>(), false);
+        State = new GameState(gameId, new Dictionary<string, Vote>(), false);
     }
 
     public GameState State { get; private set; }
@@ -17,6 +17,9 @@ public class GameAggregate
         {
             case PlayerJoinedGame playerJoinedGame:
                 Apply(playerJoinedGame);
+                break;
+            case PlayerLeftGame playerLeftGame:
+                Apply(playerLeftGame);
                 break;
             case GameReset reset:
                 Apply(reset);
@@ -34,7 +37,16 @@ public class GameAggregate
     {
         // TODO use C#12 dictionary literal when available
         var newPlayerVotes = State.PlayerVotes;
-        newPlayerVotes[e.PlayerName] = null;
+        newPlayerVotes[e.PlayerName] = new Vote();
+
+        State = State with { PlayerVotes = newPlayerVotes };
+    }
+    
+    private void Apply(PlayerLeftGame e)
+    {
+        // TODO use C#12 dictionary literal when available
+        var newPlayerVotes = State.PlayerVotes;
+        newPlayerVotes.Remove(e.PlayerName);
 
         State = State with { PlayerVotes = newPlayerVotes };
     }
@@ -43,7 +55,7 @@ public class GameAggregate
     {
         State = State with
         {
-            PlayerVotes = State.PlayerVotes.ToDictionary(pv => pv.Key, _ => (double?)null),
+            PlayerVotes = State.PlayerVotes.ToDictionary(pv => pv.Key, _ => new Vote(VoteStatus.Pending)),
             ShowVotes = false
         };
     }
@@ -51,7 +63,7 @@ public class GameAggregate
     private void Apply(VoteCast e)
     {
         var newPlayerVotes = State.PlayerVotes;
-        newPlayerVotes[e.PlayerName] = e.Score;
+        newPlayerVotes[e.PlayerName] = e.Vote;
         State = State with { PlayerVotes = newPlayerVotes };
     }
 

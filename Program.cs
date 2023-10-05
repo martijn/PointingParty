@@ -25,6 +25,7 @@ builder.Services.AddMassTransit(x =>
 });
 
 builder.Services.AddSingleton<EventHub>();
+builder.Services.AddScoped<GameContext>();
 
 var app = builder.Build();
 

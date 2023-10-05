@@ -3,15 +3,21 @@ using PointingParty.Events;
 
 namespace PointingParty;
 
-public class EventHub : IConsumer<PlayerJoinedGame>, IConsumer<GameReset>, IConsumer<VoteCast>, IConsumer<VotesShown>
+public class EventHub : IConsumer<PlayerJoinedGame>, IConsumer<PlayerLeftGame>, IConsumer<GameReset>, IConsumer<VoteCast>, IConsumer<VotesShown>
 {
-    public Task Consume(ConsumeContext<PlayerJoinedGame> context)
+    public Task Consume(ConsumeContext<GameReset> context)
     {
         OnEvent?.Invoke(context.Message);
         return Task.CompletedTask;
     }
 
-    public Task Consume(ConsumeContext<GameReset> context)
+    public Task Consume(ConsumeContext<PlayerJoinedGame> context)
+    {
+        OnEvent?.Invoke(context.Message);
+        return Task.CompletedTask;
+    }
+    
+    public Task Consume(ConsumeContext<PlayerLeftGame> context)
     {
         OnEvent?.Invoke(context.Message);
         return Task.CompletedTask;

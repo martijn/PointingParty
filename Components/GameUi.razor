@@ -1,24 +1,23 @@
 @using PointingParty.Events
 @using MassTransit
 @attribute [RenderModeServer]
-@inject IBus _bus
-@inject EventHub _hub
+@inject GameContext GameContext
 
 <h3 class="text-lg mb-2 text-center">
     Your vote, @PlayerName:
 </h3>
 
 <div class="mb-4 grid gap-1 md:gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-5">
-    <VoteButton OnClick="@(_ => Vote(1))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote == 1)">1</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(2))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote == 2)">2</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(3))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote == 3)">3</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(5))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote == 5)">5</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(8))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote == 8)">8</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(13))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_myVote == 13)">13</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(21))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_myVote == 21)">21</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(34))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_myVote == 34)">34</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(0.1))" Color="VoteButton.ButtonColor.Gray" Selected="@(_myVote == 0.1)">❓</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(0.2))" Color="VoteButton.ButtonColor.Gray" Selected="@(_myVote == 0.2)">☕️</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(1))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(1.0))">1</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(2))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(2.0))">2</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(3))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(3.0))">3</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(5))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(5.0))">5</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(8))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(8.0))">8</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(13))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_myVote.Equals(13.0))">13</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(21))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_myVote.Equals(21.0))">21</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(34))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_myVote.Equals(34.0))">34</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(VoteStatus.Question))" Color="VoteButton.ButtonColor.Gray" Selected="@(_myVote.Equals(VoteStatus.Question))">❓</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(VoteStatus.Coffee))" Color="VoteButton.ButtonColor.Gray" Selected="@(_myVote.Equals(VoteStatus.Coffee))">☕️</VoteButton>
 </div>
 
 <h3 class="text-lg mb-2 text-center">
@@ -33,18 +32,18 @@
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vote</th>
             </thead>
             <tbody>
-            @foreach (var (player, score) in _game.State.PlayerVotes)
+            @foreach (var (player, vote) in GameContext.Game.State.PlayerVotes)
             {
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-200">@player</td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-200">
-                        @if (score is not null && player != PlayerName && !_game.State.ShowVotes)
+                        @if (vote.Status != VoteStatus.Pending && player != PlayerName && !GameContext.Game.State.ShowVotes)
                         {
                             <span>Voted!</span>
                         }
                         else
                         {
-                            @score
+                            @vote
                         }
                     </td>
                 </tr>
@@ -59,7 +58,7 @@
         </div>
     </div>
     <div>
-        @if (_game.State.ShowVotes)
+        @if (GameContext.Game.State.ShowVotes)
         {
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
@@ -67,7 +66,7 @@
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Frequency</th>
                 </thead>
                 <tbody>
-                @foreach (var group in _game.State.PlayerVotes.GroupBy(x => x.Value))
+                @foreach (var group in GameContext.Game.State.PlayerVotes.GroupBy(x => x.Value))
                 {
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-200">@group.Key</td>
@@ -83,7 +82,7 @@
                     Average score:
                 </span>
                 <span class="text-gray-800 dark:text-gray-200">
-                    @_game.State.PlayerVotes.Average(x => x.Value)
+                    @GameContext.Game.State.PlayerVotes.Average(x => x.Value.Score)
                 </span>
             </div>
         }
@@ -97,10 +96,6 @@
 </div>
 
 @code {
-    private string _btnClass = "text-2xl py-4 lg:py-8 px-4 inline-flex justify-center items-center gap-2 rounded-md border border-transparent bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all dark:focus:ring-offset-gray-800";
-    private string _btnClassGray = "text-2xl py-4 lg:py-8 px-4 inline-flex justify-center items-center gap-2 rounded-md border border-transparent bg-gray-500 text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800";
-    private string _btnClassIndigo = "text-2xl py-4 lg:py-8 px-4 inline-flex justify-center items-center gap-2 rounded-md border border-transparent bg-indigo-500 text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all dark:focus:ring-offset-gray-800";
-
 
     [Parameter]
     public string GameId { get; set; }
@@ -108,47 +103,48 @@
     [Parameter]
     public string PlayerName { get; set; }
 
-    private GameAggregate _game;
-    private double? _myVote;
+    private Vote _myVote;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _game = new GameAggregate(GameId);
-        _hub.OnEvent += HandleGameEvent; // TODO dispose + leave event
-        base.OnInitialized();
+        await GameContext.Start(GameId, PlayerName);
+        GameContext.OnStateChange += HandleGameEvent;
+        await base.OnInitializedAsync();
     }
 
-    private void HandleGameEvent(IGameEvent e)
+    private void HandleGameEvent(bool gameWasReset)
     {
-        if (e.GameId != GameId) return;
-        
-        if (e is GameReset) _myVote = null;
-        
-        _game.Handle(e);
+        if (gameWasReset) _myVote = new Vote();
         InvokeAsync(StateHasChanged); // todo await
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) await _bus.Publish(new PlayerJoinedGame(NewId.Next(), GameId, PlayerName));
+        if (firstRender) await GameContext.PlayerJoined();
         await base.OnAfterRenderAsync(firstRender);
     }
 
     protected async Task Vote(double score)
     {
-        _myVote = score;
-        await _bus.Publish(new VoteCast(NewId.Next(), GameId, PlayerName, score));
+        _myVote = new Vote(score);
+        await GameContext.VoteCast(_myVote);
+    }
+
+    protected async Task Vote(VoteStatus status)
+    {
+        _myVote = new Vote(status);
+        await GameContext.VoteCast(_myVote);
     }
 
     private async Task ClearVotes()
     {
-        _myVote = null;
-        await _bus.Publish(new GameReset(NewId.Next(), GameId));
+        _myVote = new Vote();
+        await GameContext.ClearVotes();
     }
 
     private async Task ShowVotes()
     {
-        await _bus.Publish(new VotesShown(NewId.Next(), GameId));
+        await GameContext.ShowVotes();
     }
 
 }

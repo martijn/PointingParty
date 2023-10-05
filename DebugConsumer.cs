@@ -19,7 +19,7 @@ public class DebugConsumer(ILogger<DebugConsumer> logger) : IConsumer<PlayerJoin
         logger.LogInformation(
             "Player {playerName} voted {score} in {GameId}",
             context.Message.PlayerName,
-            context.Message.Score,
+            context.Message.Vote,
             context.Message.GameId);
         return Task.CompletedTask;
     }
