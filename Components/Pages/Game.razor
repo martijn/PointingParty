@@ -1,0 +1,47 @@
+@page "/Game/{gameId}"
+@using System.ComponentModel.DataAnnotations
+
+<h2 class="text-xl my-2">Pointing Party: @GameId</h2>
+
+@if (_inGame)
+{
+    <GameUi GameId="@GameId" PlayerName="@GameAndName.Name" />
+}
+else
+{
+    <EditForm Model="GameAndName" OnValidSubmit="EnterGame" FormName="GameData">
+        <DataAnnotationsValidator />
+        <p>
+            <label>
+                Name:
+                <InputText @bind-Value="GameAndName.Name" />
+            </label>
+        </p>
+        <p>
+            <button type="submit">Enter game</button>
+        </p>
+    </EditForm>
+}
+
+@code {
+
+    [Parameter]
+    public string GameId { get; set; }
+
+    private bool _inGame;
+
+    protected class FormData
+    {
+        [Required]
+        public string Name { get; set; } = "";
+    }
+
+    [SupplyParameterFromForm]
+    protected FormData GameAndName { get; set; } = new();
+
+    private void EnterGame()
+    {
+        _inGame = true;
+    }
+
+}
