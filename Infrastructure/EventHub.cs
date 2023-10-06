@@ -1,9 +1,10 @@
 using MassTransit;
-using PointingParty.Events;
+using PointingParty.Domain.Events;
 
-namespace PointingParty;
+namespace PointingParty.Infrastructure;
 
-public class EventHub : IConsumer<PlayerJoinedGame>, IConsumer<PlayerLeftGame>, IConsumer<GameReset>, IConsumer<VoteCast>, IConsumer<VotesShown>
+public class EventHub : IConsumer<PlayerJoinedGame>, IConsumer<PlayerLeftGame>, IConsumer<GameReset>,
+    IConsumer<VoteCast>, IConsumer<VotesShown>
 {
     public Task Consume(ConsumeContext<GameReset> context)
     {
@@ -16,7 +17,7 @@ public class EventHub : IConsumer<PlayerJoinedGame>, IConsumer<PlayerLeftGame>, 
         OnEvent?.Invoke(context.Message);
         return Task.CompletedTask;
     }
-    
+
     public Task Consume(ConsumeContext<PlayerLeftGame> context)
     {
         OnEvent?.Invoke(context.Message);

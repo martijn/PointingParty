@@ -1,6 +1,6 @@
-using PointingParty.Events;
+using PointingParty.Domain.Events;
 
-namespace PointingParty;
+namespace PointingParty.Domain;
 
 public class GameAggregate
 {
@@ -41,7 +41,7 @@ public class GameAggregate
 
         State = State with { PlayerVotes = newPlayerVotes };
     }
-    
+
     private void Apply(PlayerLeftGame e)
     {
         // TODO use C#12 dictionary literal when available

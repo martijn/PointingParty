@@ -1,7 +1,6 @@
-using System.Reflection;
 using MassTransit;
-using PointingParty;
 using PointingParty.Components;
+using PointingParty.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 

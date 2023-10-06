@@ -1,11 +1,19 @@
 using MassTransit;
-using PointingParty.Events;
+using PointingParty.Domain.Events;
 
-namespace PointingParty;
+namespace PointingParty.Infrastructure;
 
 public class DebugConsumer(ILogger<DebugConsumer> logger) : IConsumer<PlayerJoinedGame>, IConsumer<PlayerLeftGame>,
     IConsumer<GameReset>, IConsumer<VoteCast>
 {
+    public Task Consume(ConsumeContext<GameReset> context)
+    {
+        logger.LogInformation(
+            "Game {GameId}: game was reset",
+            context.Message.GameId);
+        return Task.CompletedTask;
+    }
+
     public Task Consume(ConsumeContext<PlayerJoinedGame> context)
     {
         logger.LogInformation(
@@ -21,14 +29,6 @@ public class DebugConsumer(ILogger<DebugConsumer> logger) : IConsumer<PlayerJoin
             "Game {GameId}: {playerName} left",
             context.Message.GameId,
             context.Message.PlayerName);
-        return Task.CompletedTask;
-    }
-    
-    public Task Consume(ConsumeContext<GameReset> context)
-    {
-        logger.LogInformation(
-            "Game {GameId}: game was reset",
-            context.Message.GameId);
         return Task.CompletedTask;
     }
 

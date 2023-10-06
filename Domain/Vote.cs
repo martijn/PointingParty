@@ -1,4 +1,4 @@
-namespace PointingParty;
+namespace PointingParty.Domain;
 
 public enum VoteStatus
 {

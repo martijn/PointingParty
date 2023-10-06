@@ -1,6 +1,6 @@
 using MassTransit;
 
-namespace PointingParty.Events;
+namespace PointingParty.Domain.Events;
 
 public interface IGameEvent
 {

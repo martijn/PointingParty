@@ -37,11 +37,15 @@
 </div>
 
 
-<p>
+<p class="mb-2">
     Or, join the demo game
     <a href="/Game/Demo%20One" class="text-gray-800 dark:text-gray-400">'Demo One'</a>
     or
     <a href="/Game/Demo%20Two" class="text-gray-800 dark:text-gray-400">'Demo Two'</a>.
+</p>
+
+<p class="mb-2 text-center text-xs font-medium">
+    © Martijn Storck - <a href="https://github.com/martijn/PointingParty">Source on GitHub</a>
 </p>
 
 @code {
@@ -50,21 +54,22 @@
     {
         [Required]
         public string GameId { get; set; }
+
         public string? PlayerName { get; set; }
     }
-    
+
     [SupplyParameterFromForm]
     NewGameModel Model { get; set; } = new();
-    
+
     private void StartGame()
     {
         if (string.IsNullOrWhiteSpace(Model.PlayerName))
         {
-            NavManager.NavigateTo($"/Game/{Model.GameId}", forceLoad: true);
+            NavManager.NavigateTo($"/Game/{Model.GameId}", true);
         }
         else
         {
-            NavManager.NavigateTo($"/Game/{Model.GameId}?PlayerName={Model.PlayerName}", forceLoad: true);
+            NavManager.NavigateTo($"/Game/{Model.GameId}?PlayerName={Model.PlayerName}", true);
         }
     }
 

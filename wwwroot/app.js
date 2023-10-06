@@ -1,1 +1,3 @@
-window.replaceURL = (url) => { history.replaceState(null, "", url); }
+window.replaceURL = (url) => {
+    history.replaceState(null, "", url);
+}

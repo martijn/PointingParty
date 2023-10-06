@@ -1,5 +1,5 @@
 using MassTransit;
 
-namespace PointingParty.Events;
+namespace PointingParty.Domain.Events;
 
 public record VotesShown(NewId Id, string GameId) : IGameEvent;
