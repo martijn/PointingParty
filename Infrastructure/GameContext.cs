@@ -24,7 +24,7 @@ public sealed class GameContext : IAsyncDisposable
         _logger.LogDebug("GameContext {_id}: Started", _id);
     }
 
-    public GameAggregate? Game { get; set; }
+    private GameAggregate? Game { get; set; }
 
     public async ValueTask DisposeAsync()
     {
@@ -40,7 +40,7 @@ public sealed class GameContext : IAsyncDisposable
 
     public GameAggregate Start(string gameId, string playerName, Action<bool>? stateChangeHandler)
     {
-        Game = new GameAggregate(gameId);
+        Game = new GameAggregate(gameId, playerName);
         _playerName = playerName;
         OnStateChange += stateChangeHandler;
         _hub.OnEvent += HandleGameEvent;
@@ -50,31 +50,33 @@ public sealed class GameContext : IAsyncDisposable
         return Game;
     }
 
-    public async Task PlayerJoined()
-    {
-        await _bus.Publish(new PlayerJoinedGame(Game!.State.GameId, _playerName!));
-    }
-
-    public async Task VoteCast(Vote vote)
-    {
-        await _bus.Publish(new VoteCast(Game!.State.GameId, _playerName!, vote));
-    }
-
-    public async Task ClearVotes()
-    {
-        await _bus.Publish(new GameReset(Game!.State.GameId));
-    }
-
-    public async Task ShowVotes()
-    {
-        await _bus.Publish(new VotesShown(Game!.State.GameId));
-    }
-
     private void HandleGameEvent(IGameEvent e)
     {
         if (e.GameId != Game!.State.GameId) return;
 
         Game?.Handle(e);
+        PublishEvents();
         OnStateChange?.Invoke(e is GameReset);
+    }
+
+    public void PublishEvents()
+    {
+        if (!Game!.EventsToPublish.Any()) return;
+        
+        foreach (object gameEvent in Game.EventsToPublish)
+        {
+            _bus.Publish(gameEvent switch
+            {
+                GameReset e => e,
+                PlayerJoinedGame e => e,
+                PlayerLeftGame e => e,
+                Sync e => e,
+                VoteCast e => e,
+                VotesShown e => e,
+                _ => throw new NotImplementedException($"Missing PublishEvent handler for event {gameEvent}")
+            });
+        }
+        
+        Game.EventsToPublish.Clear();
     }
 }

@@ -1,5 +1,6 @@
 @using PointingParty.Domain
 @using PointingParty.Infrastructure
+@using PointingParty.Components.Pages
 @attribute [RenderModeServer]
 @inject GameContext GameContext
 
@@ -117,33 +118,40 @@
         InvokeAsync(StateHasChanged);
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender) await GameContext.PlayerJoined();
-        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            _game.PlayerJoined();
+            GameContext.PublishEvents();
+        }
     }
 
-    protected async Task Vote(double score)
+    protected void Vote(double score)
     {
         _myVote = new Vote(score);
-        await GameContext.VoteCast(_myVote);
+        _game.VoteCast(_myVote);
+        GameContext.PublishEvents();
     }
 
-    protected async Task Vote(VoteStatus status)
+    protected void Vote(VoteStatus status)
     {
         _myVote = new Vote(status);
-        await GameContext.VoteCast(_myVote);
+        _game.VoteCast(_myVote);
+        GameContext.PublishEvents();
     }
 
-    private async Task ClearVotes()
+    private void ClearVotes()
     {
         _myVote = new Vote();
-        await GameContext.ClearVotes();
+        _game.ClearVotes();
+        GameContext.PublishEvents();
     }
 
-    private async Task ShowVotes()
+    private void ShowVotes()
     {
-        await GameContext.ShowVotes();
+        _game.ShowVotes();
+        GameContext.PublishEvents();
     }
 
 }

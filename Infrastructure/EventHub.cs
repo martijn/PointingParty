@@ -4,7 +4,7 @@ using PointingParty.Domain.Events;
 namespace PointingParty.Infrastructure;
 
 public class EventHub : IConsumer<PlayerJoinedGame>, IConsumer<PlayerLeftGame>, IConsumer<GameReset>,
-    IConsumer<VoteCast>, IConsumer<VotesShown>
+    IConsumer<VoteCast>, IConsumer<Sync>, IConsumer<VotesShown>
 {
     public Task Consume(ConsumeContext<GameReset> context)
     {
@@ -24,6 +24,12 @@ public class EventHub : IConsumer<PlayerJoinedGame>, IConsumer<PlayerLeftGame>, 
         return Task.CompletedTask;
     }
 
+    public Task Consume(ConsumeContext<Sync> context)
+    {
+        OnEvent?.Invoke(context.Message);
+        return Task.CompletedTask;
+    }
+    
     public Task Consume(ConsumeContext<VoteCast> context)
     {
         OnEvent?.Invoke(context.Message);

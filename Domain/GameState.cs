@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace PointingParty.Domain;
 
-public record GameState(string GameId, Dictionary<string, Vote> PlayerVotes, bool ShowVotes);
+public record GameState(string GameId, ImmutableDictionary<string, Vote> PlayerVotes, bool ShowVotes);
