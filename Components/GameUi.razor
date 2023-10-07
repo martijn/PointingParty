@@ -1,6 +1,5 @@
 @using PointingParty.Domain
 @using PointingParty.Infrastructure
-@using PointingParty.Components.Pages
 @attribute [RenderModeServer]
 @inject GameContext GameContext
 
@@ -9,16 +8,16 @@
 </h3>
 
 <div class="mb-4 grid gap-1 md:gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-5">
-    <VoteButton OnClick="@(_ => Vote(1))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(1.0))">1</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(2))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(2.0))">2</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(3))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(3.0))">3</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(5))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(5.0))">5</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(8))" Color="VoteButton.ButtonColor.Blue" Selected="@(_myVote.Equals(8.0))">8</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(13))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_myVote.Equals(13.0))">13</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(21))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_myVote.Equals(21.0))">21</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(34))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_myVote.Equals(34.0))">34</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(VoteStatus.Question))" Color="VoteButton.ButtonColor.Gray" Selected="@(_myVote.Equals(VoteStatus.Question))">❓</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(VoteStatus.Coffee))" Color="VoteButton.ButtonColor.Gray" Selected="@(_myVote.Equals(VoteStatus.Coffee))">☕️</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(1))" Color="VoteButton.ButtonColor.Blue" Selected="@(_game.CurrentVote.Equals(1.0))">1</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(2))" Color="VoteButton.ButtonColor.Blue" Selected="@(_game.CurrentVote.Equals(2.0))">2</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(3))" Color="VoteButton.ButtonColor.Blue" Selected="@(_game.CurrentVote.Equals(3.0))">3</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(5))" Color="VoteButton.ButtonColor.Blue" Selected="@(_game.CurrentVote.Equals(5.0))">5</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(8))" Color="VoteButton.ButtonColor.Blue" Selected="@(_game.CurrentVote.Equals(8.0))">8</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(13))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_game.CurrentVote.Equals(13.0))">13</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(21))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_game.CurrentVote.Equals(21.0))">21</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(34))" Color="VoteButton.ButtonColor.Indigo" Selected="@(_game.CurrentVote.Equals(34.0))">34</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(VoteStatus.Question))" Color="VoteButton.ButtonColor.Gray" Selected="@(_game.CurrentVote.Equals(VoteStatus.Question))">❓</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(VoteStatus.Coffee))" Color="VoteButton.ButtonColor.Gray" Selected="@(_game.CurrentVote.Equals(VoteStatus.Coffee))">☕️</VoteButton>
 </div>
 
 <h3 class="text-lg mb-2 text-center">
@@ -104,7 +103,6 @@
     [Parameter]
     public string PlayerName { get; set; } = "";
 
-    private Vote _myVote;
     private GameAggregate _game = default!;
 
     protected override void OnInitialized()
@@ -112,9 +110,8 @@
         _game = GameContext.Start(GameId, PlayerName, HandleGameEvent);
     }
 
-    private void HandleGameEvent(bool gameWasReset)
+    private void HandleGameEvent()
     {
-        if (gameWasReset) _myVote = new Vote();
         InvokeAsync(StateHasChanged);
     }
 
@@ -129,21 +126,18 @@
 
     protected void Vote(double score)
     {
-        _myVote = new Vote(score);
-        _game.VoteCast(_myVote);
+        _game.VoteCast(score);
         GameContext.PublishEvents();
     }
 
     protected void Vote(VoteStatus status)
     {
-        _myVote = new Vote(status);
-        _game.VoteCast(_myVote);
+        _game.VoteCast(status);
         GameContext.PublishEvents();
     }
 
     private void ClearVotes()
     {
-        _myVote = new Vote();
         _game.ClearVotes();
         GameContext.PublishEvents();
     }

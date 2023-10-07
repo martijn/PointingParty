@@ -1,23 +1,22 @@
 using System.Collections.Immutable;
-using System.Resources;
-using PointingParty.Components.Pages;
 using PointingParty.Domain.Events;
 
 namespace PointingParty.Domain;
 
 public class GameAggregate
 {
-    public List<IGameEvent> EventsToPublish { get; set; } = new();
-    
+    private readonly string _playerName;
+
     public GameAggregate(string gameId, string playerName)
     {
         State = new GameState(gameId, ImmutableDictionary<string, Vote>.Empty, false);
         _playerName = playerName;
     }
 
+    public List<IGameEvent> EventsToPublish { get; set; } = new();
+
     public GameState State { get; private set; }
-    private readonly string _playerName;
-    private Vote _currentVote = new Vote(VoteStatus.Pending);
+    public Vote CurrentVote { get; private set; }
 
     public void Handle(IGameEvent eventMessage)
     {
@@ -26,14 +25,13 @@ public class GameAggregate
             case PlayerJoinedGame playerJoinedGame:
                 Apply(playerJoinedGame);
                 if (playerJoinedGame.PlayerName != _playerName)
-                {
-                    EventsToPublish.Add(new Sync(State.GameId, _playerName, _currentVote));
-                }
+                    EventsToPublish.Add(new Sync(State.GameId, _playerName, CurrentVote));
                 break;
             case PlayerLeftGame playerLeftGame:
                 Apply(playerLeftGame);
                 break;
             case GameReset reset:
+                CurrentVote = new Vote();
                 Apply(reset);
                 break;
             case Sync sync:
@@ -78,13 +76,13 @@ public class GameAggregate
     private void Apply(Sync e)
     {
         if (State.PlayerVotes.ContainsKey(e.PlayerName)) return;
-        
+
         State = State with
         {
             PlayerVotes = State.PlayerVotes.SetItem(e.PlayerName, e.Vote)
         };
     }
-    
+
     private void Apply(VoteCast e)
     {
         State = State with
@@ -97,7 +95,7 @@ public class GameAggregate
     {
         State = State with { ShowVotes = true };
     }
-    
+
     public void PlayerJoined()
     {
         EventsToPublish.Add(new PlayerJoinedGame(State.GameId, _playerName));
@@ -105,12 +103,13 @@ public class GameAggregate
 
     public void VoteCast(Vote vote)
     {
-        _currentVote = vote;
+        CurrentVote = vote;
         EventsToPublish.Add(new VoteCast(State.GameId, _playerName, vote));
     }
 
     public void ClearVotes()
     {
+        CurrentVote = new Vote();
         EventsToPublish.Add(new GameReset(State.GameId));
     }
 

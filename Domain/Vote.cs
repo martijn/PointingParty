@@ -74,4 +74,14 @@ public readonly struct Vote : IEquatable<Vote>, IEquatable<VoteStatus>, IEquatab
     {
         return !(left == right);
     }
+
+    public static implicit operator Vote(double score)
+    {
+        return new Vote(score);
+    }
+
+    public static implicit operator Vote(VoteStatus status)
+    {
+        return new Vote(status);
+    }
 }

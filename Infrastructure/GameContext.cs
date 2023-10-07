@@ -36,9 +36,9 @@ public sealed class GameContext : IAsyncDisposable
         _hub.OnEvent -= HandleGameEvent;
     }
 
-    public event Action<bool>? OnStateChange;
+    public event Action? OnStateChange;
 
-    public GameAggregate Start(string gameId, string playerName, Action<bool>? stateChangeHandler)
+    public GameAggregate Start(string gameId, string playerName, Action? stateChangeHandler)
     {
         Game = new GameAggregate(gameId, playerName);
         _playerName = playerName;
@@ -56,7 +56,7 @@ public sealed class GameContext : IAsyncDisposable
 
         Game?.Handle(e);
         PublishEvents();
-        OnStateChange?.Invoke(e is GameReset);
+        OnStateChange?.Invoke();
     }
 
     public void PublishEvents()
