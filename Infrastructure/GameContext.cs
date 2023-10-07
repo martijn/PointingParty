@@ -62,9 +62,8 @@ public sealed class GameContext : IAsyncDisposable
     public void PublishEvents()
     {
         if (!Game!.EventsToPublish.Any()) return;
-        
-        foreach (object gameEvent in Game.EventsToPublish)
-        {
+
+        var publishTasks = Game.EventsToPublish.Select(gameEvent =>
             _bus.Publish(gameEvent switch
             {
                 GameReset e => e,
@@ -74,9 +73,10 @@ public sealed class GameContext : IAsyncDisposable
                 VoteCast e => e,
                 VotesShown e => e,
                 _ => throw new NotImplementedException($"Missing PublishEvent handler for event {gameEvent}")
-            });
-        }
+            })
+        ).ToArray();
         
         Game.EventsToPublish.Clear();
+        Task.WaitAll(publishTasks);
     }
 }
