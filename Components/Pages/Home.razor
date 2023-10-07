@@ -53,13 +53,13 @@
     class NewGameModel
     {
         [Required]
-        public string GameId { get; set; }
+        public string? GameId { get; set; }
 
         public string? PlayerName { get; set; }
     }
 
     [SupplyParameterFromForm]
-    NewGameModel Model { get; set; } = new();
+    NewGameModel Model { get; set;  } = new();
 
     private void StartGame()
     {

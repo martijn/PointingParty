@@ -29,40 +29,45 @@ public sealed class GameContext : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if (Game is not null && _playerName is not null)
-            await _bus.Publish(new PlayerLeftGame(NewId.Next(), Game!.State.GameId, _playerName));
+            await _bus.Publish(new PlayerLeftGame(Game!.State.GameId, _playerName));
 
         _logger.LogDebug("GameContext {_id}: Disposing", _id);
+
+        _hub.OnEvent -= HandleGameEvent;
     }
 
     public event Action<bool>? OnStateChange;
 
-    public async Task Start(string gameId, string playerName)
+    public GameAggregate Start(string gameId, string playerName, Action<bool>? stateChangeHandler)
     {
-        _playerName = playerName;
         Game = new GameAggregate(gameId);
-        _hub.OnEvent += HandleGameEvent; // TODO dispose + leave event
+        _playerName = playerName;
+        OnStateChange += stateChangeHandler;
+        _hub.OnEvent += HandleGameEvent;
 
         _logger.LogDebug("GameContext {_id}: Loaded gameId {gameId} for {_playerName}", _id, gameId, _playerName);
+
+        return Game;
     }
 
     public async Task PlayerJoined()
     {
-        await _bus.Publish(new PlayerJoinedGame(NewId.Next(), Game!.State.GameId, _playerName));
+        await _bus.Publish(new PlayerJoinedGame(Game!.State.GameId, _playerName!));
     }
 
     public async Task VoteCast(Vote vote)
     {
-        await _bus.Publish(new VoteCast(NewId.Next(), Game!.State.GameId, _playerName, vote));
+        await _bus.Publish(new VoteCast(Game!.State.GameId, _playerName!, vote));
     }
 
     public async Task ClearVotes()
     {
-        await _bus.Publish(new GameReset(NewId.Next(), Game!.State.GameId));
+        await _bus.Publish(new GameReset(Game!.State.GameId));
     }
 
     public async Task ShowVotes()
     {
-        await _bus.Publish(new VotesShown(NewId.Next(), Game!.State.GameId));
+        await _bus.Publish(new VotesShown(Game!.State.GameId));
     }
 
     private void HandleGameEvent(IGameEvent e)

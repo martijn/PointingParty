@@ -37,7 +37,7 @@
                 Color switch {
                     ButtonColor.Blue => "dark:focus:ring-offset-gray-800",
                     ButtonColor.Indigo => "dark:focus:ring-offset-gray-800",
-                    ButtonColor.Gray =>"dark:border-gray-700 dark:focus:ring-gray-600 dark:focus:ring-offset-gray-800" });
+                    _ =>"dark:border-gray-700 dark:focus:ring-gray-600 dark:focus:ring-offset-gray-800" });
         }
         else
         {
@@ -46,7 +46,7 @@
                 Color switch {
                     ButtonColor.Blue => "dark:focus:ring-offset-gray-800",
                     ButtonColor.Indigo => "dark:focus:ring-offset-gray-800",
-                    ButtonColor.Gray =>"dark:bg-gray-700 dark:focus:ring-offset-gray-800"});
+                    _ =>"dark:bg-gray-700 dark:focus:ring-offset-gray-800"});
         }
 
         return str.ToString();
