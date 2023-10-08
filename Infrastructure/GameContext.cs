@@ -4,18 +4,18 @@ using PointingParty.Domain.Events;
 
 namespace PointingParty.Infrastructure;
 
-public sealed class GameContext : IAsyncDisposable
+public sealed class GameContext : IDisposable
 {
-    private readonly IBus _bus;
     private readonly EventHub _hub;
     private readonly Guid _id;
     private readonly ILogger<GameContext> _logger;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     private string? _playerName;
 
-    public GameContext(IBus bus, EventHub hub, ILogger<GameContext> logger)
+    public GameContext(IBus publishEndpoint, EventHub hub, ILogger<GameContext> logger)
     {
-        _bus = bus;
+        _publishEndpoint = publishEndpoint;
         _hub = hub;
         _logger = logger;
 
@@ -26,10 +26,13 @@ public sealed class GameContext : IAsyncDisposable
 
     private GameAggregate? Game { get; set; }
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
         if (Game is not null && _playerName is not null)
-            await _bus.Publish(new PlayerLeftGame(Game!.State.GameId, _playerName));
+        {
+            Game.PlayerLeft();
+            PublishEvents();
+        }
 
         _logger.LogDebug("GameContext {_id}: Disposing", _id);
 
@@ -64,7 +67,7 @@ public sealed class GameContext : IAsyncDisposable
         if (!Game!.EventsToPublish.Any()) return;
 
         var publishTasks = Game.EventsToPublish.Select(gameEvent =>
-            _bus.Publish(gameEvent switch
+            _publishEndpoint.Publish(gameEvent switch
             {
                 GameReset e => e,
                 PlayerJoinedGame e => e,
@@ -75,7 +78,7 @@ public sealed class GameContext : IAsyncDisposable
                 _ => throw new NotImplementedException($"Missing PublishEvent handler for event {gameEvent}")
             })
         ).ToArray();
-        
+
         Game.EventsToPublish.Clear();
         Task.WaitAll(publishTasks);
     }

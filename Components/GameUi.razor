@@ -138,13 +138,13 @@
 
     private void ClearVotes()
     {
-        _game.ClearVotes();
+        _game.GameReset();
         GameContext.PublishEvents();
     }
 
     private void ShowVotes()
     {
-        _game.ShowVotes();
+        _game.VotesShown();
         GameContext.PublishEvents();
     }
 

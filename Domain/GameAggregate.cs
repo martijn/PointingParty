@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using PointingParty.Components;
 using PointingParty.Domain.Events;
 
 namespace PointingParty.Domain;
@@ -23,14 +22,14 @@ public class GameAggregate
     {
         switch (eventMessage)
         {
+            case GameReset reset:
+                Apply(reset);
+                break;
             case PlayerJoinedGame playerJoinedGame:
                 Apply(playerJoinedGame);
                 break;
             case PlayerLeftGame playerLeftGame:
                 Apply(playerLeftGame);
-                break;
-            case GameReset reset:
-                Apply(reset);
                 break;
             case Sync sync:
                 Apply(sync);
@@ -46,13 +45,24 @@ public class GameAggregate
         }
     }
 
+    private void Apply(GameReset e)
+    {
+        CurrentVote = new Vote();
+
+        State = State with
+        {
+            PlayerVotes = State.PlayerVotes.ToImmutableDictionary(pv => pv.Key, _ => new Vote(VoteStatus.Pending)),
+            ShowVotes = false
+        };
+    }
+
     private void Apply(PlayerJoinedGame e)
     {
         State = State with
         {
             PlayerVotes = State.PlayerVotes.SetItem(e.PlayerName, new Vote())
         };
-        
+
         if (e.PlayerName != _playerName)
             EventsToPublish.Add(new Sync(State.GameId, _playerName, CurrentVote));
     }
@@ -65,16 +75,6 @@ public class GameAggregate
         };
     }
 
-    private void Apply(GameReset e)
-    {
-        CurrentVote = new Vote();
-                
-        State = State with
-        {
-            PlayerVotes = State.PlayerVotes.ToImmutableDictionary(pv => pv.Key, _ => new Vote(VoteStatus.Pending)),
-            ShowVotes = false
-        };
-    }
 
     private void Apply(Sync e)
     {
@@ -99,11 +99,25 @@ public class GameAggregate
         State = State with { ShowVotes = true };
     }
 
+    public void GameReset()
+    {
+        var clearVotesEvent = new GameReset(State.GameId);
+        Apply(clearVotesEvent);
+        EventsToPublish.Add(clearVotesEvent);
+    }
+
     public void PlayerJoined()
     {
         var playerJoinedEvent = new PlayerJoinedGame(State.GameId, _playerName);
         Apply(playerJoinedEvent);
         EventsToPublish.Add(playerJoinedEvent);
+    }
+
+    public void PlayerLeft()
+    {
+        var playerLeftEvent = new PlayerLeftGame(State.GameId, _playerName);
+        Apply(playerLeftEvent);
+        EventsToPublish.Add(playerLeftEvent);
     }
 
     public void VoteCast(Vote vote)
@@ -114,14 +128,7 @@ public class GameAggregate
         EventsToPublish.Add(voteCastEvent);
     }
 
-    public void ClearVotes()
-    {
-        var clearVotesEvent = new GameReset(State.GameId);
-        Apply(clearVotesEvent);
-        EventsToPublish.Add(clearVotesEvent);
-    }
-
-    public void ShowVotes()
+    public void VotesShown()
     {
         var showVotesEvent = new VotesShown(State.GameId);
         Apply(showVotesEvent);
