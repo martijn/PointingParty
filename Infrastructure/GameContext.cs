@@ -13,7 +13,7 @@ public sealed class GameContext : IDisposable
 
     private string? _playerName;
 
-    public GameContext(IBus publishEndpoint, EventHub hub, ILogger<GameContext> logger)
+    public GameContext(IPublishEndpoint publishEndpoint, EventHub hub, ILogger<GameContext> logger)
     {
         _publishEndpoint = publishEndpoint;
         _hub = hub;
