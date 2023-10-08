@@ -28,15 +28,15 @@
     <div>
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Player</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vote</th>
+            <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Player</th>
+            <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vote</th>
             </thead>
             <tbody>
             @foreach (var (player, vote) in _game.State.PlayerVotes)
             {
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-200">@player</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-200">
+                    <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">@player</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">
                         @if (vote.Status != VoteStatus.Pending && player != PlayerName && !_game.State.ShowVotes)
                         {
                             <span>Voted!</span>
@@ -62,15 +62,15 @@
         {
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Frequency</th>
+                <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
+                <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Frequency</th>
                 </thead>
                 <tbody>
                 @foreach (var group in _game.State.PlayerVotes.GroupBy(x => x.Value))
                 {
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-200">@group.Key</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-200">
+                        <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">@group.Key</td>
+                        <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">
                             @group.Count()
                         </td>
                     </tr>
