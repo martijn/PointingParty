@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using PointingParty.Components;
 using PointingParty.Domain.Events;
 
 namespace PointingParty.Domain;
@@ -24,14 +25,11 @@ public class GameAggregate
         {
             case PlayerJoinedGame playerJoinedGame:
                 Apply(playerJoinedGame);
-                if (playerJoinedGame.PlayerName != _playerName)
-                    EventsToPublish.Add(new Sync(State.GameId, _playerName, CurrentVote));
                 break;
             case PlayerLeftGame playerLeftGame:
                 Apply(playerLeftGame);
                 break;
             case GameReset reset:
-                CurrentVote = new Vote();
                 Apply(reset);
                 break;
             case Sync sync:
@@ -54,6 +52,9 @@ public class GameAggregate
         {
             PlayerVotes = State.PlayerVotes.SetItem(e.PlayerName, new Vote())
         };
+        
+        if (e.PlayerName != _playerName)
+            EventsToPublish.Add(new Sync(State.GameId, _playerName, CurrentVote));
     }
 
     private void Apply(PlayerLeftGame e)
@@ -66,6 +67,8 @@ public class GameAggregate
 
     private void Apply(GameReset e)
     {
+        CurrentVote = new Vote();
+                
         State = State with
         {
             PlayerVotes = State.PlayerVotes.ToImmutableDictionary(pv => pv.Key, _ => new Vote(VoteStatus.Pending)),
@@ -98,23 +101,30 @@ public class GameAggregate
 
     public void PlayerJoined()
     {
-        EventsToPublish.Add(new PlayerJoinedGame(State.GameId, _playerName));
+        var playerJoinedEvent = new PlayerJoinedGame(State.GameId, _playerName);
+        Apply(playerJoinedEvent);
+        EventsToPublish.Add(playerJoinedEvent);
     }
 
     public void VoteCast(Vote vote)
     {
         CurrentVote = vote;
-        EventsToPublish.Add(new VoteCast(State.GameId, _playerName, vote));
+        var voteCastEvent = new VoteCast(State.GameId, _playerName, vote);
+        Apply(voteCastEvent);
+        EventsToPublish.Add(voteCastEvent);
     }
 
     public void ClearVotes()
     {
-        CurrentVote = new Vote();
-        EventsToPublish.Add(new GameReset(State.GameId));
+        var clearVotesEvent = new GameReset(State.GameId);
+        Apply(clearVotesEvent);
+        EventsToPublish.Add(clearVotesEvent);
     }
 
     public void ShowVotes()
     {
-        EventsToPublish.Add(new VotesShown(State.GameId));
+        var showVotesEvent = new VotesShown(State.GameId);
+        Apply(showVotesEvent);
+        EventsToPublish.Add(showVotesEvent);
     }
 }

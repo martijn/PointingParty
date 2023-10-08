@@ -35,23 +35,25 @@ public readonly struct Vote : IEquatable<Vote>, IEquatable<VoteStatus>, IEquatab
         {
             VoteStatus.Coffee => "☕️",
             VoteStatus.Question => "❓",
-            VoteStatus.Pending => "-",
+            VoteStatus.Pending => "",
             _ => Score.ToString()
         };
     }
 
     public override bool Equals(object? obj)
     {
-        return obj is Vote && Equals(obj);
+        return obj is Vote vote && Equals(vote);
     }
 
     public bool Equals(Vote other)
     {
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
         return other.Score == Score && other.Status == Status;
     }
 
     public bool Equals(double score)
     {
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
         return Status == VoteStatus.Scored && Score == score;
     }
 
