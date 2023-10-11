@@ -13,7 +13,7 @@ This project uses .NET 8, Blazor, Mass Transit and Tailwind CSS.
 
 ## Try it out
 
-The application can be found at https://pointingparty.fly.dev/. It comes without warranty, but feel
+The application can be found at https://pointingparty.com/. It comes without warranty, but feel
 free to use it in your team.
 
 ## Contributing
