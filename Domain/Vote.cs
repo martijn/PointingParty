@@ -8,7 +8,7 @@ public enum VoteStatus
     Question
 }
 
-public readonly struct Vote : IEquatable<Vote>, IEquatable<VoteStatus>, IEquatable<double>
+public readonly struct Vote : IEquatable<Vote>, IEquatable<VoteStatus>, IEquatable<double>, IComparable<Vote>
 {
     public double Score { get; init; }
     public VoteStatus Status { get; init; }
@@ -38,6 +38,21 @@ public readonly struct Vote : IEquatable<Vote>, IEquatable<VoteStatus>, IEquatab
             VoteStatus.Pending => "",
             _ => Score.ToString()
         };
+    }
+
+    public int CompareTo(Vote other)
+    {
+        if (Status == VoteStatus.Scored && other.Status != VoteStatus.Scored)
+        {
+            return -1;
+        }
+
+        if (Status != VoteStatus.Scored && other.Status == VoteStatus.Scored)
+        {
+            return 1;
+        }
+
+        return Score.CompareTo(other.Score);
     }
 
     public override bool Equals(object? obj)
