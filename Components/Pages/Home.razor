@@ -6,12 +6,19 @@
 
 <h2 class="text-xl my-2 leading-8">Welcome to Pointing Party!</h2>
 
-<p class="mb-2">
-    This Blazor-powered tool can help story point estimation sessions. Choose a name for the game below
-    and click the start button. You can share the link to the game with other participants afterward.
+<p class="mt-4 mb-2">
+    Pointing Party enables efficient agile story point estimation ceremonies. To get started, pick a name
+    for your game (like your team name or project) and click the start button. Send the game link to your
+    team members and the voting can start! No registration is necessary; this tool is designed to make
+    voting as quick as possible.
 </p>
 
-<div class="mb-2">
+<p class="mb-2">
+    This free service is powered by .NET 8 and Blazor. The source code is available on GitHub:
+    <a href="https://github.com/martijn/PointingParty">github.com/martijn/PointingParty</a>.
+</p>
+
+<div class="mt-4 mb-2">
     <EditForm Model="Model" OnValidSubmit="StartGame" FormName="NewGame">
         <DataAnnotationsValidator></DataAnnotationsValidator>
         <div class="my-2">
@@ -19,33 +26,27 @@
                 <span class="text-xs font-medium text-gray-500 uppercase">
                     Game name:
                 </span>
-                <InputText @bind-Value="Model.GameId" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400" />
+                <InputText @bind-Value="Model.GameId" placeholder="My Pointing Party" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400" />
             </label>
         </div>
-        <!--
-        <div>
+        <div class="my-2">
             <label>
-                Your name:
-                <InputText @bind-Value="Model.PlayerName" />
+                <span class="text-xs font-medium text-gray-500 uppercase">
+                    Your name:
+                </span>
+                <InputText @bind-Value="Model.PlayerName"  placeholder="Player Name" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400" />
             </label>
         </div>
-        -->
-        <div>
+        <div class="my-2 text-center md:text-left">
             <FatButton type="submit">Start a new game</FatButton>
         </div>
     </EditForm>
 </div>
 
-
-<p class="mb-2">
-    Or, join the demo game
-    <a href="/Game/Demo%20One" class="text-gray-800 dark:text-gray-400">'Demo One'</a>
-    or
-    <a href="/Game/Demo%20Two" class="text-gray-800 dark:text-gray-400">'Demo Two'</a>.
-</p>
-
-<p class="mb-2 text-center text-xs font-medium">
-    © Martijn Storck - <a href="https://github.com/martijn/PointingParty">Source on GitHub</a>
+<p class="mt-4 mb-2">
+    Alternatively, join the one of the demo games:
+    <a href="/Game/Demo%20One">'Demo One'</a> or
+    <a href="/Game/Demo%20Two">'Demo Two'</a>.
 </p>
 
 @code {

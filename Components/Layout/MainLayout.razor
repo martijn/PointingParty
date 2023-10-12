@@ -1,8 +1,8 @@
 ﻿@inherits LayoutComponentBase
 
 <main class="text-gray-800 dark:text-white">
-    <article class="container max-w-[85rem] mx-auto px-4">
-        <div class="float-right text-xs uppercase font-medium leading-8">
+    <article class="max-w-6xl mx-auto px-4">
+        <div class="float-right text-xs uppercase font-medium leading-8 mb-2 md:mb-4">
             <a href="/" class="text-gray-800 dark:hidden">
                 <img src="/pointpingparty-cactus-light.svg" alt="Pointing Party" class="h-8" />
             </a>
@@ -12,6 +12,11 @@
         </div>
         @Body
     </article>
+    
+    <p class="my-2 text-gray-500 text-center text-xs md:mt-4">
+        © Martijn Storck / <a href="https://storck.io/" class="font-normal">storck.io</a><br>
+        <a href="https://github.com/martijn/PointingParty" class="font-normal">Source on GitHub</a>
+    </p>
 </main>
 
 <div id="blazor-error-ui">
