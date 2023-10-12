@@ -7,3 +7,4 @@
 fly.toml
 Dockerfile*
 **/*.md
+wwwroot/app.min.css
