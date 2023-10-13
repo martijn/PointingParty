@@ -2,6 +2,7 @@
 **/bin/
 **/obj/
 **/out/
+e2e
 
 # files
 fly.toml
