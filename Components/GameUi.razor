@@ -70,7 +70,7 @@
                 {
                     <tr>
                         <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">@group.Key</td>
-                        <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">
+                        <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200" data-testid="voteCount-@group.Key">
                             @group.Count()
                         </td>
                     </tr>
@@ -81,8 +81,8 @@
                 <span class="text-xs font-medium text-gray-500 uppercase">
                     Average score:
                 </span>
-                <span class="text-gray-800 dark:text-gray-200">
-                    @_game.State.PlayerVotes.Average(x => x.Value.Score)
+                <span class="text-gray-800 dark:text-gray-200" data-testid="average">
+                    @Math.Round(AverageScore, 2)
                 </span>
             </div>
         }
@@ -149,5 +149,8 @@
         _game.VotesShown();
         GameContext.PublishEvents();
     }
+
+    private double AverageScore =>
+        _game.State.PlayerVotes.Where(x => x.Value.Status == VoteStatus.Scored).Average(x => x.Value.Score);
 
 }
