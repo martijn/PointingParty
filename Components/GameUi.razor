@@ -129,14 +129,18 @@
         }
     }
 
-    protected void Vote(double score)
+    private void Vote(double score)
     {
+        if (_game.State.ShowVotes) return;
+        
         _game.VoteCast(score);
         GameContext.PublishEvents();
     }
 
-    protected void Vote(VoteStatus status)
+    private void Vote(VoteStatus status)
     {
+        if (_game.State.ShowVotes) return;
+        
         _game.VoteCast(status);
         GameContext.PublishEvents();
     }
