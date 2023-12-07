@@ -60,26 +60,11 @@
     <div>
         @if (_game.State.ShowVotes)
         {
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead>
-                <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
-                <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Frequency</th>
-                </thead>
-                <tbody>
-                @foreach (var group in _game.State.PlayerVotes.GroupBy(x => x.Value).OrderBy(g => g.Key))
-                {
-                    <tr>
-                        <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">@group.Key</td>
-                        <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200" data-testid="voteCount-@group.Key">
-                            @group.Count()
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+            <ScoreGraph PlayerVotes="@_game.State.PlayerVotes" />
+
             if (AverageScore() != default)
             {
-                <div class="mb-2">
+                <div class="mb-2 text-center">
                     <span class="text-xs font-medium text-gray-500 uppercase">
                         Average score:
                     </span>
@@ -88,6 +73,12 @@
                     </span>
                 </div>
             }
+
+            <div class="self-center">
+                <div class="mb-2 text-xs font-medium text-gray-500 uppercase text-center">
+                    Click 'Clear votes' to start the next round
+                </div>
+            </div>
         }
         else
         {
@@ -132,7 +123,7 @@
     private void Vote(double score)
     {
         if (_game.State.ShowVotes) return;
-        
+
         _game.VoteCast(score);
         GameContext.PublishEvents();
     }
@@ -140,7 +131,7 @@
     private void Vote(VoteStatus status)
     {
         if (_game.State.ShowVotes) return;
-        
+
         _game.VoteCast(status);
         GameContext.PublishEvents();
     }

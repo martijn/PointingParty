@@ -87,7 +87,5 @@ test('shows statistics', async ({page, context}) => {
     await expect(page.getByRole('cell', {name: 'Player Abstains'})).toBeVisible();
     await page.getByRole('button', {name: 'Show votes'}).click();
 
-    await expect(page.getByTestId('voteCount-3')).toContainText('1');
-    await expect(page.getByTestId('voteCount-5')).toContainText('2');
     await expect(page.getByTestId('average')).toContainText('4,33');
 });
