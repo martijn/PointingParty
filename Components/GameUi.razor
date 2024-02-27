@@ -20,6 +20,13 @@
     <VoteButton OnClick="@(_ => Vote(VoteStatus.Coffee))" Color="VoteButton.ButtonColor.Gray" Selected="@(_game.CurrentVote.Equals(VoteStatus.Coffee))">☕️</VoteButton>
 </div>
 
+@if (_game.State.PlayerVotes.IsEmpty)
+{
+    <div class="bg-gray-800 text-sm text-white rounded-lg p-4 dark:bg-white dark:text-gray-800 mb-4" role="alert">
+        <span class="font-bold">⚠️ A game state issue was detected</span> Please close this browser window and rejoin the game.
+    </div>
+}
+
 <h3 class="text-lg mb-2 text-center">
     Results for this round:
 </h3>
@@ -104,20 +111,13 @@
     protected override void OnInitialized()
     {
         _game = GameContext.Start(GameId, PlayerName, HandleGameEvent);
+        _game.PlayerJoined();
+        GameContext.PublishEvents();
     }
 
     private void HandleGameEvent()
     {
         InvokeAsync(StateHasChanged);
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-        {
-            _game.PlayerJoined();
-            GameContext.PublishEvents();
-        }
     }
 
     private void Vote(double score)
