@@ -1,0 +1,77 @@
+@using System.Collections.Immutable
+@using ApexCharts
+@using PointingParty.Domain
+<ApexChart TItem="ChartData" Title="VOTE DISTRIBUTION" Options="_chartOptions">
+    <ApexPointSeries TItem="ChartData"
+                     Items="Data"
+                     Name="Votes"
+                     SeriesType="SeriesType.Bar"
+                     XValue="@(e => e.Vote.Status == VoteStatus.Pending ? "No vote" : e.Vote.ToString())"
+                     YValue="e => e.Frequency"
+                     PointColor="e => BarColor(e.Vote)"/>
+</ApexChart>
+
+@code {
+    private const string HighScoreColor = "#5047E5";
+    private const string LowScoreColor = "#2664EB";
+    private const string DefaultColor = "#6B7280";
+
+    [Parameter]
+    public IImmutableDictionary<string, Vote> PlayerVotes { get; set; } = ImmutableDictionary<string, Vote>.Empty;
+
+    private List<ChartData> Data { get; set; } = [];
+
+    private readonly ApexChartOptions<ChartData> _chartOptions = new()
+    {
+        Title = new Title
+        {
+            Style = new TitleStyle { Color = DefaultColor, FontWeight = "normal" }
+        },
+        Chart = new Chart
+        {
+            Toolbar = new Toolbar
+            {
+                Show = false
+            }
+        },
+        PlotOptions = new PlotOptions
+        {
+            Bar = new PlotOptionsBar
+            {
+                Horizontal = true
+            }
+        },
+        Yaxis = [new YAxis { Max = 5, DecimalsInFloat = 0 }]
+    };
+
+    protected override void OnInitialized()
+    {
+        foreach (var group in PlayerVotes.GroupBy(x => x.Value).OrderBy(g => g.Key))
+        {
+            Data.Add(new ChartData { Vote = group.Key, Frequency = group.Count() });
+
+            if (group.Count() > (int)_chartOptions.Yaxis[0].Max)
+            {
+                _chartOptions.Yaxis[0].Max = group.Count();
+            }
+        }
+    }
+
+
+    private static string BarColor(Vote vote)
+    {
+        if (vote.Status == VoteStatus.Scored)
+        {
+            return vote.Score > 8 ? HighScoreColor : LowScoreColor;
+        }
+
+        return DefaultColor;
+    }
+
+    public class ChartData
+    {
+        public Vote Vote { get; set; }
+        public int Frequency { get; set; }
+    }
+
+}
