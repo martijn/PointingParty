@@ -6,6 +6,10 @@
         <Nullable>enable</Nullable>
         <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
         <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
+        <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>partial</TrimMode>
     </PropertyGroup>
 
     <ItemGroup>
