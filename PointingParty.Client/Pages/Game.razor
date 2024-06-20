@@ -17,7 +17,7 @@
 }
 else
 {
-    <EditForm Model="NameForm" OnValidSubmit="HandleFormSubmit" FormName="GameData">
+    <EditForm Model="NameForm" OnValidSubmit="CreateGame" FormName="GameData">
         <DataAnnotationsValidator/>
         <div class="my-2">
             <label>
@@ -82,12 +82,6 @@ else
         // bar has a share-friendly URL
         if (GameContext.Game is not null && !string.IsNullOrWhiteSpace(PlayerName))
              NavManager.NavigateTo($"/Game/{GameId}", replace: true);
-    }
-
-    private void HandleFormSubmit()
-    {
-        PlayerName = NameForm.Name;
-        CreateGame();
     }
 
     public async ValueTask DisposeAsync()
