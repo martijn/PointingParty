@@ -1,0 +1,145 @@
+@using PointingParty.Domain
+
+<h3 class="text-lg mb-2 text-center">
+    Your vote, @GameContext.PlayerName:
+</h3>
+
+<div class="mb-4 grid gap-1 md:gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-5">
+    <VoteButton OnClick="@(_ => Vote(1))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(1.0))">1</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(2))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(2.0))">2</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(3))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(3.0))">3</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(5))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(5.0))">5</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(8))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(8.0))">8</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(13))" Color="VoteButton.ButtonColor.Indigo" Selected="@(Game.CurrentVote.Equals(13.0))">13</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(21))" Color="VoteButton.ButtonColor.Indigo" Selected="@(Game.CurrentVote.Equals(21.0))">21</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(34))" Color="VoteButton.ButtonColor.Indigo" Selected="@(Game.CurrentVote.Equals(34.0))">34</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(VoteStatus.Question))" Color="VoteButton.ButtonColor.Gray" Selected="@(Game.CurrentVote.Equals(VoteStatus.Question))">❓</VoteButton>
+    <VoteButton OnClick="@(_ => Vote(VoteStatus.Coffee))" Color="VoteButton.ButtonColor.Gray" Selected="@(Game.CurrentVote.Equals(VoteStatus.Coffee))">☕️</VoteButton>
+</div>
+
+@if (GameContext.Status != ConnectionStatus.Connected)
+{
+    <div class="bg-gray-800 text-sm text-white rounded-lg p-4 dark:bg-white dark:text-gray-800 mb-4" role="alert">
+        @if (GameContext.Status == ConnectionStatus.Connecting)
+        {
+            <span class="font-bold"><span class="animate-pulse">⚠️</span> Connection issue detected, attempting to reconnect…</span>
+        }
+        else
+        {
+            <span class="font-bold">⛔️ Connection lost. Please reload browser window to continue.</span>
+        }
+    </div>
+}
+
+<h3 class="text-lg mb-2 text-center">
+    Results for this round:
+</h3>
+
+<div class="md:grid grid-cols-3 gap-4">
+    <div>
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" data-testid="results">
+            <thead>
+            <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Player</th>
+            <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vote</th>
+            </thead>
+            <tbody>
+            @foreach (var (player, vote) in Game.State.PlayerVotes.OrderBy(x => x.Key))
+            {
+                <tr>
+                    <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">@player</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200" data-testid="vote-for-@player">
+                        @if (vote.Status != VoteStatus.Pending && player != GameContext.PlayerName && !Game.State.ShowVotes)
+                        {
+                            <span>Voted!</span>
+                        }
+                        else
+                        {
+                            @vote
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="self-center py-4">
+        <div class="text-center">
+            <FatButton OnClick="ShowVotes">Show votes</FatButton>
+            <FatButton OnClick="ClearVotes">Clear votes</FatButton>
+        </div>
+    </div>
+    <div>
+        @if (Game.State.ShowVotes)
+        {
+            <ScoreGraph PlayerVotes="@Game.State.PlayerVotes"/>
+
+            if (Game.State.AverageVote() != default)
+            {
+                <div class="mb-2 text-center">
+                    <span class="text-xs font-medium text-gray-500 uppercase">
+                        Average score:
+                    </span>
+                    <span class="text-gray-800 dark:text-gray-200" data-testid="average">
+                        @Math.Round(Game.State.AverageVote(), 2)
+                    </span>
+                </div>
+            }
+
+            <div class="self-center">
+                <div class="mb-2 text-xs font-medium text-gray-500 uppercase text-center">
+                    Click 'Clear votes' to start the next round
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="self-center">
+                <div class="mb-2 text-xs font-medium text-gray-500 uppercase text-center">
+                    Click 'Show votes' to see results
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public IGameContext GameContext { get; set; } = default!;
+
+    private GameAggregate Game => GameContext.Game ?? new GameAggregate();
+
+    protected override void OnInitialized()
+    {
+        Game.PlayerJoined();
+        GameContext.PublishEvents();
+    }
+
+    private void Vote(double score)
+    {
+        if (Game.State.ShowVotes) return;
+
+        Game.VoteCast(score);
+        GameContext.PublishEvents();
+    }
+
+    private void Vote(VoteStatus status)
+    {
+        if (Game.State.ShowVotes) return;
+
+        Game.VoteCast(status);
+        GameContext.PublishEvents();
+    }
+
+    private void ClearVotes()
+    {
+        Game.GameReset();
+        GameContext.PublishEvents();
+    }
+
+    private void ShowVotes()
+    {
+        Game.VotesShown();
+        GameContext.PublishEvents();
+    }
+}

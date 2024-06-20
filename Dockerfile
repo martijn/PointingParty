@@ -1,7 +1,8 @@
 # Adjust DOTNET_OS_VERSION as desired
-ARG DOTNET_SDK_VERSION=8.0
+ARG DOTNET_SDK_VERSION=9.0-preview
 
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_SDK_VERSION}-alpine AS build
+RUN dotnet workload install wasm-tools
 WORKDIR /src
 
 # tailwind install
@@ -16,19 +17,25 @@ RUN set -ex; \
     chmod +x tailwindcss; \
     ls -al tailwindcss ;
 
+RUN apk add python3
+
 # restore
-COPY *.csproj .
-RUN dotnet restore -r linux-musl-amd64 -p:PublishReadyToRun=true
+COPY *.sln .
+COPY PointingParty/PointingParty.csproj PointingParty/PointingParty.csproj
+COPY PointingParty.Client/PointingParty.Client.csproj PointingParty.Client/PointingParty.Client.csproj
+COPY PointingParty.Client.Tests/PointingParty.Client.Tests.csproj PointingParty.Client.Tests/PointingParty.Client.Tests.csproj
+COPY PointingParty.Domain/PointingParty.Domain.csproj PointingParty.Domain/PointingParty.Domain.csproj
+RUN dotnet restore
 
 # copy everything
 COPY . ./
 
 # tailwind build 
 RUN set -ex; \
-    ./tailwindcss -i wwwroot/app.css -o wwwroot/app.min.css --minify && rm wwwroot/app.css
+    ./tailwindcss -i PointingParty/wwwroot/app.css -o PointingParty/wwwroot/app.min.css --minify && rm PointingParty/wwwroot/app.css
 
 # build
-RUN dotnet publish --no-restore -c Release -r linux-musl-amd64 -p:PublishReadyToRun=true -o /app
+RUN dotnet publish --no-restore -c Release -o /app PointingParty
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_SDK_VERSION}-alpine
