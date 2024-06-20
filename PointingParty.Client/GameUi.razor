@@ -16,10 +16,10 @@
     <VoteButton OnClick="@(_ => Vote(VoteStatus.Coffee))" Color="VoteButton.ButtonColor.Gray" Selected="@(Game.CurrentVote.Equals(VoteStatus.Coffee))">☕️</VoteButton>
 </div>
 
-@if (Status != ConnectionStatus.Connected)
+@if (GameContext.Status != ConnectionStatus.Connected)
 {
     <div class="bg-gray-800 text-sm text-white rounded-lg p-4 dark:bg-white dark:text-gray-800 mb-4" role="alert">
-        @if (Status == ConnectionStatus.Connecting)
+        @if (GameContext.Status == ConnectionStatus.Connecting)
         {
             <span class="font-bold">⚠️ Connection issue detected, attempting to reconnect…</span>
         }
@@ -107,9 +107,6 @@
     public IGameContext GameContext { get; set; } = default!;
 
     private GameAggregate Game => GameContext.Game ?? new GameAggregate();
-
-    [Parameter]
-    public ConnectionStatus Status { get; set; }
 
     protected override void OnInitialized()
     {
