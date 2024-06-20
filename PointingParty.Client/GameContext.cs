@@ -50,6 +50,11 @@ public sealed class GameContext(ILogger<GameContext> logger, NavigationManager n
         _ => ConnectionStatus.Failed
     };
 
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection != null) await _hubConnection.DisposeAsync();
+    }
+
     public Task ReceiveGameEvent(IGameEvent gameEvent)
     {
         logger.LogDebug("Received {eventType}: {e}", gameEvent.GetType(), gameEvent);
@@ -77,39 +82,45 @@ public sealed class GameContext(ILogger<GameContext> logger, NavigationManager n
             .WithAutomaticReconnect()
             .Build();
 
-        _hub = _hubConnection.ServerProxy<IGameEventHub>();
-        _ = _hubConnection.ClientRegistration<IGameEventClient>(this);
+        _hubConnection.Closed += OnHubConnectionClosed;
+        _hubConnection.Reconnecting += OnHubConnectionReconnecting;
+        _hubConnection.Reconnected += OnHubConnectionReconnected;
 
-        _hubConnection.Closed += s =>
-        {
-            logger.LogInformation("Hub connection closed: {s}", s);
-            OnStateChange?.Invoke();
-            return Task.CompletedTask;
-        };
-        _hubConnection.Reconnecting += s =>
-        {
-            logger.LogInformation("Hub reconnecting: {s}", s);
-            OnStateChange?.Invoke();
-            return Task.CompletedTask;
-        };
-        _hubConnection.Reconnected += s =>
-        {
-            if (Game is not null)
-            {
-                Game.PlayerJoined();
-                PublishEvents();
-            }
-            OnStateChange?.Invoke();
-            logger.LogInformation("Hub reconnected: {s}", s);
-            return Task.CompletedTask;
-        };
+        _hub = _hubConnection.ServerProxy<IGameEventHub>();
+        _hubConnection.ClientRegistration<IGameEventClient>(this);
+
         await _hubConnection.StartAsync();
         logger.LogInformation("Hub connection State: {state} id: {id}", _hubConnection.State,
             _hubConnection.ConnectionId);
     }
 
-    public async ValueTask DisposeAsync()
+    private Task OnHubConnectionReconnected(string? s)
     {
-        if (_hubConnection != null) await _hubConnection.DisposeAsync();
+        if (Game is not null)
+        {
+            // On rejoin, clear user vote and game status then publish join
+            // event so other players sync up
+            Game.Handle(new GameReset(Game.State.GameId));
+            Game.PlayerJoined();
+            PublishEvents();
+        }
+
+        OnStateChange?.Invoke();
+        logger.LogInformation("Hub reconnected: {s}", s);
+        return Task.CompletedTask;
+    }
+
+    private Task OnHubConnectionReconnecting(Exception? s)
+    {
+        logger.LogInformation("Hub reconnecting: {s}", s);
+        OnStateChange?.Invoke();
+        return Task.CompletedTask;
+    }
+
+    private Task OnHubConnectionClosed(Exception? s)
+    {
+        logger.LogInformation("Hub connection closed: {s}", s);
+        OnStateChange?.Invoke();
+        return Task.CompletedTask;
     }
 }

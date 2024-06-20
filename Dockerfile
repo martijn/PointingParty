@@ -23,6 +23,7 @@ RUN apk add python3
 COPY *.sln .
 COPY PointingParty/PointingParty.csproj PointingParty/PointingParty.csproj
 COPY PointingParty.Client/PointingParty.Client.csproj PointingParty.Client/PointingParty.Client.csproj
+COPY PointingParty.Client.Tests/PointingParty.Client.Tests.csproj PointingParty.Client.Tests/PointingParty.Client.Tests.csproj
 COPY PointingParty.Domain/PointingParty.Domain.csproj PointingParty.Domain/PointingParty.Domain.csproj
 RUN dotnet restore
 

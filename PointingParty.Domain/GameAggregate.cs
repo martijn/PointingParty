@@ -15,7 +15,7 @@ public class GameAggregate
         State = new GameState(string.Empty, ImmutableDictionary<string, Vote>.Empty, false);
         _playerName = string.Empty;
     }
-    
+
     /// <summary>
     /// Initialize a new game aggregate
     /// </summary>
@@ -92,7 +92,8 @@ public class GameAggregate
 
     private void Apply(Sync e)
     {
-        if (State.PlayerVotes.ContainsKey(e.PlayerName)) return;
+        if (State.PlayerVotes.TryGetValue(e.PlayerName, out var existingVote) && existingVote == e.Vote) 
+            return;
 
         State = State with
         {
