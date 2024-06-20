@@ -12,7 +12,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSignalR();
 
 // GameContext is purely injected for prerendering purposes
-builder.Services.AddTransient<GameContext>();
+builder.Services.AddTransient<IGameContext, MockGameContext>();
 
 var app = builder.Build();
 

@@ -1,5 +1,4 @@
 @using PointingParty.Domain
-
 <h3 class="text-lg mb-2 text-center">
     Your vote, @GameContext.PlayerName:
 </h3>
@@ -17,10 +16,17 @@
     <VoteButton OnClick="@(_ => Vote(VoteStatus.Coffee))" Color="VoteButton.ButtonColor.Gray" Selected="@(Game.CurrentVote.Equals(VoteStatus.Coffee))">☕️</VoteButton>
 </div>
 
-@if (false && Game.State.PlayerVotes.IsEmpty)
+@if (Status != ConnectionStatus.Connected)
 {
     <div class="bg-gray-800 text-sm text-white rounded-lg p-4 dark:bg-white dark:text-gray-800 mb-4" role="alert">
-        <span class="font-bold">⚠️ A game state issue was detected</span> Please close this browser window and rejoin the game.
+        @if (Status == ConnectionStatus.Connecting)
+        {
+            <span class="font-bold">⚠️ Connection issue detected, attempting to reconnect…</span>
+        }
+        else
+        {
+            <span class="font-bold">⛔️ Connection lost. Please reload browser window to continue.</span>
+        }
     </div>
 }
 
@@ -96,11 +102,14 @@
 </div>
 
 @code {
+
     [Parameter]
-    public GameContext GameContext { get; set; } = default!;
-    
+    public IGameContext GameContext { get; set; } = default!;
+
+    private GameAggregate Game => GameContext.Game ?? new GameAggregate();
+
     [Parameter]
-    public GameAggregate Game { get; set; } = default!;
+    public ConnectionStatus Status { get; set; }
 
     protected override void OnInitialized()
     {
@@ -144,4 +153,5 @@
             .ToList();
         return scoredVotes.Any() ? scoredVotes.Average() : default;
     }
+
 }

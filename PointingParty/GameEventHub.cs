@@ -7,7 +7,9 @@ namespace PointingParty;
 
 public class GameEventHub : Hub<IGameEventClient>, IGameEventHub
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
+    private const string PlayerNameItem = "playerName";
+    private const string GameIdItem = "gameId";
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly ILogger<GameEventHub> _logger;
 
     public GameEventHub(ILogger<GameEventHub> logger)
@@ -29,7 +31,7 @@ public class GameEventHub : Hub<IGameEventClient>, IGameEventHub
         IGameEvent? typedEvent = null;
 
         // If SignalR .NET client gets support for polymorphic json serialization we can
-        // cange the signature of this method to IGameEvent and get rid of this mess.
+        // change the signature of this method to IGameEvent and get rid of this mess.
         switch (targetType.Name)
         {
             case nameof(GameReset):
@@ -55,10 +57,20 @@ public class GameEventHub : Hub<IGameEventClient>, IGameEventHub
                 break;
         }
 
+        if (typedEvent is PlayerJoinedGame joinedGame)
+        {
+            // Save player details, so we can broadcast a leave event when client disconnects
+            Context.Items[PlayerNameItem] = joinedGame.PlayerName;
+            Context.Items[GameIdItem] = joinedGame.GameId;
+            
+            // Add client to SignalR group so it receives events for the game it joined
+            Groups.AddToGroupAsync(Context.ConnectionId, joinedGame.GameId);
+        }
+
         if (typedEvent is not null)
         {
-            _logger.LogInformation("Received {type} event with: {event}", type, typedEvent);
-            return Clients.All.ReceiveGameEvent(typedEvent);
+            _logger.LogInformation("{gameId}: processing event {event}", typedEvent.GameId, typedEvent);
+            return Clients.GroupExcept(typedEvent.GameId, Context.ConnectionId).ReceiveGameEvent(typedEvent);
         }
 
         return Task.CompletedTask;
@@ -77,36 +89,17 @@ public class GameEventHub : Hub<IGameEventClient>, IGameEventHub
         else
             _logger.LogInformation("Client disconnected gracefully.");
 
-        var gameId = ContextGameId();
-        var playerName = ContextPlayerName();
+        if (Context.Items[GameIdItem] is string gameId && Context.Items[PlayerNameItem] is string playerName)
+        {
+            _logger.LogInformation("{gameId}: Broadcasting PlayerLeftGame for {playerName}", gameId, playerName);
+            await Clients.Group(gameId).ReceiveGameEvent(new PlayerLeftGame(gameId, playerName));
+        }
 
-        await Clients.All.ReceiveGameEvent(new PlayerLeftGame(gameId, playerName));
-        
         await base.OnDisconnectedAsync(exception);
     }
-    
+
     private static T? DeserializeEvent<T>(JsonElement jsonEvent) where T : class, IGameEvent
     {
-        return jsonEvent.Deserialize<T>(_jsonOptions);
-    }
-
-    private string ContextGameId()
-    {
-        if (Context.GetHttpContext() is { } ctx)
-        {
-            return ctx.Request.Query["gameId"]!;
-        }
-
-        return string.Empty;
-    }
-    
-    private string ContextPlayerName()
-    {
-        if (Context.GetHttpContext() is { } ctx)
-        {
-            return ctx.Request.Query["playerName"]!;
-        }
-
-        return string.Empty;
+        return jsonEvent.Deserialize<T>(JsonOptions);
     }
 }

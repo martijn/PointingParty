@@ -7,6 +7,20 @@ public class GameAggregate
 {
     private readonly string _playerName;
 
+    /// <summary>
+    /// Initialize a default game aggregate with no game or playername for mocks or placeholders
+    /// </summary>
+    public GameAggregate()
+    {
+        State = new GameState(string.Empty, ImmutableDictionary<string, Vote>.Empty, false);
+        _playerName = string.Empty;
+    }
+    
+    /// <summary>
+    /// Initialize a new game aggregate
+    /// </summary>
+    /// <param name="gameId"></param>
+    /// <param name="playerName"></param>
     public GameAggregate(string gameId, string playerName)
     {
         State = new GameState(gameId, ImmutableDictionary<string, Vote>.Empty, false);

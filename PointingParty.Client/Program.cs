@@ -3,6 +3,6 @@ using PointingParty.Client;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-builder.Services.AddTransient<GameContext>();
+builder.Services.AddTransient<IGameContext, GameContext>();
 
 await builder.Build().RunAsync();

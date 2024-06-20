@@ -1,7 +1,6 @@
 @page "/Game/{gameId}"
 @using System.ComponentModel.DataAnnotations
-@using PointingParty.Domain
-@inject GameContext GameContext
+@inject IGameContext GameContext
 @inject NavigationManager NavManager
 @implements IAsyncDisposable
 @rendermode InteractiveWebAssembly
@@ -12,20 +11,20 @@
     <span class="hidden md:inline">Pointing Party: </span>@GameId
 </h2>
 
-@if (_game is not null)
+@if (GameContext.Game is not null)
 {
-    <GameUi GameContext="@GameContext" Game="@_game" @ref="_gameUi"/>
+    <GameUi GameContext="@GameContext" Status="@GameContext.Status"/>
 }
 else
 {
-    <EditForm Model="GameAndName" OnValidSubmit="EnterGame" FormName="GameData">
+    <EditForm Model="NameForm" OnValidSubmit="HandleFormSubmit" FormName="GameData">
         <DataAnnotationsValidator/>
         <div class="my-2">
             <label>
                 <span class="text-xs font-medium text-gray-500 uppercase">
                     Your name:
                 </span>
-                <InputText @bind-Value="GameAndName.Name" placeholder="Player Name" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"/>
+                <InputText @bind-Value="NameForm.Name" placeholder="Player Name" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"/>
             </label>
         </div>
         <div>
@@ -46,9 +45,6 @@ else
     [Parameter]
     public string GameId { get; set; } = string.Empty;
 
-    private GameAggregate? _game = null;
-    private GameUi _gameUi;
-
     protected class FormData
     {
         [Required]
@@ -56,41 +52,42 @@ else
     }
 
     [SupplyParameterFromForm]
-    protected FormData GameAndName { get; set; } = new();
+    protected FormData NameForm { get; set; } = new();
 
     [SupplyParameterFromQuery]
     public string? PlayerName { get; set; }
 
-    private async Task EnterGame()
+    private void CreateGame()
     {
-        _game = await GameContext.Start(GameId, GameAndName.Name, HandleGameEvent);
+        GameContext.CreateGame(GameId, NameForm.Name);
     }
 
     private void HandleGameEvent()
     {
         InvokeAsync(StateHasChanged);
     }
+
     protected override async Task OnInitializedAsync()
     {
+        await GameContext.Initialize(HandleGameEvent);
         if (string.IsNullOrWhiteSpace(PlayerName)) return;
 
-        GameAndName.Name = PlayerName;
-        await EnterGame();
-
-        NavManager.LocationChanged += LocationChanged;
-    }
-
-    private async void LocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        // Stop game so PlayerLeftGame gets sent
-        _game = null;
-        await GameContext.Stop();
+        NameForm.Name = PlayerName;
+        CreateGame();
     }
 
     protected override void OnAfterRender(bool firstRender)
     {
-        if (!string.IsNullOrWhiteSpace(PlayerName))
-            NavManager.NavigateTo($"/Game/{GameId}", replace: true);
+        // If game was started from the front page, remove PlayerName query string so the browser location
+        // bar has a share-friendly URL
+        if (GameContext.Game is not null && !string.IsNullOrWhiteSpace(PlayerName))
+             NavManager.NavigateTo($"/Game/{GameId}", replace: true);
+    }
+
+    private void HandleFormSubmit()
+    {
+        PlayerName = NameForm.Name;
+        CreateGame();
     }
 
     public async ValueTask DisposeAsync()

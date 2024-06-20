@@ -4,5 +4,5 @@ namespace PointingParty.Domain;
 
 public interface IGameEventClient
 {
-    Task ReceiveGameEvent(IGameEvent gameEvent);
+    public Task ReceiveGameEvent(IGameEvent gameEvent);
 }
