@@ -1,4 +1,5 @@
 @using PointingParty.Domain
+
 <h3 class="text-lg mb-2 text-center">
     Your vote, @GameContext.PlayerName:
 </h3>
@@ -21,7 +22,7 @@
     <div class="bg-gray-800 text-sm text-white rounded-lg p-4 dark:bg-white dark:text-gray-800 mb-4" role="alert">
         @if (GameContext.Status == ConnectionStatus.Connecting)
         {
-            <span class="font-bold">⚠️ Connection issue detected, attempting to reconnect…</span>
+            <span class="font-bold"><span class="animate-pulse">⚠️</span> Connection issue detected, attempting to reconnect…</span>
         }
         else
         {
