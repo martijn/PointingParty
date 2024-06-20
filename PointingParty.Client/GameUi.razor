@@ -37,7 +37,7 @@
 
 <div class="md:grid grid-cols-3 gap-4">
     <div>
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" data-testid="results">
             <thead>
             <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Player</th>
             <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vote</th>
@@ -47,7 +47,7 @@
             {
                 <tr>
                     <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">@player</td>
-                    <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">
+                    <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200" data-testid="vote-for-@player">
                         @if (vote.Status != VoteStatus.Pending && player != GameContext.PlayerName && !Game.State.ShowVotes)
                         {
                             <span>Voted!</span>
