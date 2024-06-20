@@ -115,19 +115,21 @@
         GameContext.PublishEvents();
     }
 
-    private void Vote(double score)
+    private async Task Vote(double score)
     {
         if (Game.State.ShowVotes) return;
 
         Game.VoteCast(score);
+        await InvokeAsync(StateHasChanged);
         GameContext.PublishEvents();
     }
 
-    private void Vote(VoteStatus status)
+    private async Task Vote(VoteStatus status)
     {
         if (Game.State.ShowVotes) return;
 
         Game.VoteCast(status);
+        await InvokeAsync(StateHasChanged);
         GameContext.PublishEvents();
     }
 
