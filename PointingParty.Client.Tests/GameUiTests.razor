@@ -9,7 +9,7 @@
     private const string PlayerName = "Player";
     private const string GameId = "TestGame";
 
-    public GameUiTest(ITestOutputHelper testOutputHelper)
+    public GameUiTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
         _game = new GameAggregate(GameId, PlayerName);
