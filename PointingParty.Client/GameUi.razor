@@ -73,14 +73,14 @@
         {
             <ScoreGraph PlayerVotes="@Game.State.PlayerVotes"/>
 
-            if (AverageScore() != default)
+            if (Game.State.AverageVote() != default)
             {
                 <div class="mb-2 text-center">
                     <span class="text-xs font-medium text-gray-500 uppercase">
                         Average score:
                     </span>
                     <span class="text-gray-800 dark:text-gray-200" data-testid="average">
-                        @Math.Round(AverageScore(), 2)
+                        @Math.Round(Game.State.AverageVote(), 2)
                     </span>
                 </div>
             }
@@ -142,14 +142,4 @@
         Game.VotesShown();
         GameContext.PublishEvents();
     }
-
-    private double AverageScore()
-    {
-        var scoredVotes = Game.State.PlayerVotes
-            .Where(x => x.Value.Status == VoteStatus.Scored)
-            .Select(x => x.Value.Score)
-            .ToList();
-        return scoredVotes.Any() ? scoredVotes.Average() : default;
-    }
-
 }
