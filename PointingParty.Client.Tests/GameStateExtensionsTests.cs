@@ -10,7 +10,7 @@ public class GameStateExtensionsTests
     {
         var state = new GameState(
             string.Empty,
-            new Dictionary<string, Vote>()
+            new Dictionary<string, Vote>
             {
                 { "a", 1 },
                 { "b", 2 }
@@ -19,7 +19,7 @@ public class GameStateExtensionsTests
 
         Assert.Equal(1.5, state.AverageVote());
     }
-    
+
     [Theory]
     [InlineData(VoteStatus.Pending)]
     [InlineData(VoteStatus.Coffee)]
@@ -28,7 +28,7 @@ public class GameStateExtensionsTests
     {
         var state = new GameState(
             string.Empty,
-            new Dictionary<string, Vote>()
+            new Dictionary<string, Vote>
             {
                 { "a", 1 },
                 { "b", 2 },
@@ -47,13 +47,13 @@ public class GameStateExtensionsTests
     {
         var state = new GameState(
             string.Empty,
-            new Dictionary<string, Vote>()
+            new Dictionary<string, Vote>
             {
                 { "a", vote },
-                { "b", vote},
+                { "b", vote }
             }.ToImmutableDictionary(),
             true);
-        
+
         Assert.Equal(default, state.AverageVote());
     }
 }
