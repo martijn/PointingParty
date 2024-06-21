@@ -8,4 +8,4 @@ e2e
 fly.toml
 Dockerfile*
 **/*.md
-wwwroot/app.min.css
+PointingParty/wwwroot/app.min.css
