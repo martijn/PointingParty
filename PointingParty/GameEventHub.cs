@@ -17,46 +17,21 @@ public class GameEventHub : Hub<IGameEventClient>, IGameEventHub
         _logger = logger;
     }
 
-    public Task BroadcastGameEvent(string type, object gameEvent)
+    public async Task BroadcastGameEvent(object gameEvent)
     {
-        var jsonEvent = (JsonElement)gameEvent;
-        var targetType = typeof(IGameEvent).Assembly.GetType(type);
-
-        if (targetType is null)
+        if (gameEvent is not JsonElement jsonEvent)
         {
-            _logger.LogError("Cannot find type {type}", type);
-            return Task.CompletedTask;
+            _logger.LogWarning("Invalid game event received.");
+            return;
         }
 
-        IGameEvent? typedEvent = null;
-
-        // If SignalR .NET client gets support for polymorphic json serialization we can
-        // change the signature of this method to IGameEvent and get rid of this mess.
-        switch (targetType.Name)
+        var typedEvent = jsonEvent.Deserialize<IGameEvent>(JsonSerializerOptions.Web);
+        if (typedEvent is null)
         {
-            case nameof(GameReset):
-                typedEvent = DeserializeEvent<GameReset>(jsonEvent);
-                break;
-            case nameof(PlayerJoinedGame):
-                typedEvent = DeserializeEvent<PlayerJoinedGame>(jsonEvent);
-                break;
-            case nameof(PlayerLeftGame):
-                typedEvent = DeserializeEvent<PlayerLeftGame>(jsonEvent);
-                break;
-            case nameof(Sync):
-                typedEvent = DeserializeEvent<Sync>(jsonEvent);
-                break;
-            case nameof(VoteCast):
-                typedEvent = DeserializeEvent<VoteCast>(jsonEvent);
-                break;
-            case nameof(VotesShown):
-                typedEvent = DeserializeEvent<VotesShown>(jsonEvent);
-                break;
-            default:
-                _logger.LogError("Cannot handle type {type}", targetType.Name);
-                break;
+            _logger.LogWarning("Failed to deserialize game event.");
+            return;
         }
-
+        
         if (typedEvent is PlayerJoinedGame joinedGame)
         {
             // Save player details, so we can broadcast a leave event when client disconnects
@@ -64,16 +39,11 @@ public class GameEventHub : Hub<IGameEventClient>, IGameEventHub
             Context.Items[GameIdItem] = joinedGame.GameId;
             
             // Add client to SignalR group so it receives events for the game it joined
-            Groups.AddToGroupAsync(Context.ConnectionId, joinedGame.GameId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, joinedGame.GameId);
         }
 
-        if (typedEvent is not null)
-        {
-            _logger.LogInformation("{gameId}: processing event {event}", typedEvent.GameId, typedEvent);
-            return Clients.GroupExcept(typedEvent.GameId, Context.ConnectionId).ReceiveGameEvent(typedEvent);
-        }
-
-        return Task.CompletedTask;
+        _logger.LogInformation("{gameId}: processing event {event}", typedEvent.GameId, typedEvent);
+        await Clients.GroupExcept(typedEvent.GameId, Context.ConnectionId).ReceiveGameEvent(typedEvent);
     }
 
     public override async Task OnConnectedAsync()
@@ -96,10 +66,5 @@ public class GameEventHub : Hub<IGameEventClient>, IGameEventHub
         }
 
         await base.OnDisconnectedAsync(exception);
-    }
-
-    private static T? DeserializeEvent<T>(JsonElement jsonEvent) where T : class, IGameEvent
-    {
-        return jsonEvent.Deserialize<T>(JsonOptions);
     }
 }
