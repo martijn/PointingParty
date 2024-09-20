@@ -1,7 +1,6 @@
-# Adjust DOTNET_OS_VERSION as desired
-ARG DOTNET_SDK_VERSION=9.0-preview
+ARG DOTNET_VERSION=9.0
 
-FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_SDK_VERSION}-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-alpine AS build
 RUN dotnet workload install wasm-tools
 WORKDIR /src
 
@@ -38,9 +37,9 @@ RUN set -ex; \
 RUN dotnet publish --no-restore -c Release -o /app PointingParty
 
 # final stage/image
-FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_SDK_VERSION}-alpine
-ENV ASPNETCORE_URLS http://+:8080
-ENV ASPNETCORE_ENVIRONMENT Production
+FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}-alpine
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 8080
 WORKDIR /app
 COPY --from=build /app .

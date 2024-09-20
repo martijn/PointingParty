@@ -36,7 +36,7 @@ public sealed class GameContext(ILogger<GameContext> logger, NavigationManager n
         logger.LogDebug("Publishing {count} events", Game.EventsToPublish.Count);
 
         foreach (var gameEvent in Game!.EventsToPublish)
-            _hub!.BroadcastGameEvent(gameEvent.GetType().ToString(), gameEvent);
+            _hub!.BroadcastGameEvent(gameEvent);
 
         Game.EventsToPublish.Clear();
     }
