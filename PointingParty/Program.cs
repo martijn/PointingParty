@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddAzureSignalR(options => options.InitialHubServerConnectionCount = 1);
 
 // GameContext is purely injected for prerendering purposes
 builder.Services.AddTransient<IGameContext, MockGameContext>();
