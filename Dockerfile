@@ -12,7 +12,7 @@ RUN set -ex; \
         x86_64) arch='linux-x64' ;; \
     esac; \
     echo Downloading tailwindcss for $apkArch ; \
-    curl -sL -o tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-$arch; \
+    curl -sL -o tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.13/tailwindcss-$arch; \
     chmod +x tailwindcss; \
     ls -al tailwindcss ;
 

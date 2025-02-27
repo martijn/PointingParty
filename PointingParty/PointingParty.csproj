@@ -6,6 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <ScopedCssEnabled>false</ScopedCssEnabled>
         <DisableScopedCssBundling>true</DisableScopedCssBundling>
+        <StaticWebAssetFingerprintingEnabled>true</StaticWebAssetFingerprintingEnabled>
+        <StaticWebAssetsFingerprintContent>true</StaticWebAssetsFingerprintContent>
     </PropertyGroup>
 
     <ItemGroup>
