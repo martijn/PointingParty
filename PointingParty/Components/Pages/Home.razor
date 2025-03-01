@@ -4,19 +4,16 @@
 
 <PageTitle>Pointing Party</PageTitle>
 
-<h2 class="text-xl my-2 leading-8 md:mb-4">Welcome to Pointing Party!</h2>
-
-<p class="mt-4 mb-2">
-    Pointing Party enables efficient agile story point estimation ceremonies. To get started, pick a name
-    for your game (like your team name or project) and click the start button. Send the game link to your
-    team members and the voting can start! No registration is necessary; this tool is designed to make
-    voting as quick as possible.
-</p>
-
-<p class="mb-2">
-    This free service is powered by .NET 9 and Blazor WebAssembly. The source code is available on GitHub:
-    <a href="https://github.com/martijn/PointingParty">github.com/martijn/PointingParty</a>.
-</p>
+<div class="max-w-5xl mx-auto px-4 xl:px-0 pt-24 lg:pt-32 pb-24">
+    <h1 class="font-semibold dark:text-white text-5xl md:text-6xl">
+        Hassle-free Story Estimation<br/>for Agile Teams
+    </h1>
+    <div class="max-w-4xl">
+        <p class="mt-5 text-neutral-400 text-lg">
+            Start a game and share the link. No registration required!
+        </p>
+    </div>
+</div>
 
 <div class="mt-4 mb-2">
     <EditForm Model="Model" OnValidSubmit="StartGame" FormName="NewGame">
@@ -26,7 +23,7 @@
                 <span class="text-xs font-medium text-gray-500 uppercase">
                     Game name:
                 </span>
-                <InputText @bind-Value="Model.GameId" placeholder="My Pointing Party" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"/>
+                <InputText @bind-Value="Model.GameId" type="text" placeholder="My Pointing Party" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-gray-700 dark:text-gray-400"/>
             </label>
         </div>
         <div class="my-2">
@@ -34,7 +31,7 @@
                 <span class="text-xs font-medium text-gray-500 uppercase">
                     Your name:
                 </span>
-                <InputText @bind-Value="Model.PlayerName" placeholder="Player Name" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"/>
+                <InputText @bind-Value="Model.PlayerName" type="text" placeholder="Player Name" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-gray-700 dark:text-gray-400"/>
             </label>
         </div>
         <div class="my-2 text-center md:text-left">

@@ -43,19 +43,6 @@ public class GameTests : BunitContext
     }
 
     [Fact]
-    public void WithGame_RendersTitle()
-    {
-        _gameContext.Game.Returns(new GameAggregate());
-
-        var cut = Render<Game>(parameters =>
-            parameters.Add(p => p.GameId, "Game"));
-
-        var h2 = cut.Find("h2");
-
-        Assert.Equal("Pointing Party: Game", h2.TextContent);
-    }
-
-    [Fact]
     public void WithPlayerName_CreatesGame_And_UpdatesUrl()
     {
         _gameContext.Game.Returns(new GameAggregate());

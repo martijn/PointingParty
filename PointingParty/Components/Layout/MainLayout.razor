@@ -1,21 +1,38 @@
 ﻿@inherits LayoutComponentBase
+<header class="flex flex-wrap md:justify-start md:flex-nowrap z-50 max-w-6xl mx-auto px-4 py-7">
+    <nav class="relative max-w-7xl w-full flex flex-wrap md:grid md:grid-cols-12 basis-full items-center mx-auto" aria-label="Global">
+        <div class="basis-full md:col-span-3">
+            <a href="/" class="text-gray-800 dark:hidden">
+                <img src="/pointpingparty-cactus-light.svg" alt="Pointing Party" class="h-10"/>
+            </a>
+            <a href="/" class="text-gray-400 hidden dark:block">
+                <img src="/pointpingparty-cactus-dark.svg" alt="Pointing Party" class="h-10"/>
+            </a>
+        </div>
+
+    @*
+        <div class="overflow-hidden transition-all duration-300 basis-full md:w-auto md:basis-auto md:col-span-9">
+            <div class="flex flex-col gap-y-4 gap-x-0 mt-5 md:flex-row md:justify-end md:items-center md:gap-y-0 md:gap-x-7 md:mt-0">
+                <div>
+                    <a class="inline-block text-black hover:text-gray-600 dark:text-white dark:hover:text-neutral-300" href="#">About</a>
+                </div>
+                <button type="button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:border-neutral-700 dark:hover:bg-white/10 dark:text-white dark:hover:text-white">
+                    Sign in
+                </button>
+            </div>
+        </div>
+        *@
+    </nav>
+</header>
 
 <main class="text-gray-800 dark:text-white">
     <article class="max-w-6xl mx-auto px-4">
-        <div class="float-right text-xs uppercase font-medium leading-8">
-            <a href="/" class="text-gray-800 dark:hidden">
-                <img src="/pointpingparty-cactus-light.svg" alt="Pointing Party" class="h-8"/>
-            </a>
-            <a href="/" class="text-gray-400 hidden dark:block">
-                <img src="/pointpingparty-cactus-dark.svg" alt="Pointing Party" class="h-8"/>
-            </a>
-        </div>
         @Body
     </article>
 
     <p class="my-2 text-gray-500 text-center text-xs md:mt-4">
         © Martijn Storck / <a href="https://storck.io/" class="font-normal">storck.io</a><br>
-        <a href="https://github.com/martijn/PointingParty" class="font-normal">Source on GitHub</a>
+        Built with <a href="https://dotnet.microsoft.com/">.NET</a>. <a href="https://github.com/martijn/PointingParty" class="font-normal">Source on GitHub</a>
     </p>
 </main>
 

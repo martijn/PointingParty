@@ -7,16 +7,16 @@
 
 <PageTitle>@GameId Pointing Party</PageTitle>
 
-<h2 class="text-xl my-2 leading-8 md:mb-4">
-    <span class="hidden md:inline">Pointing Party: </span>@GameId
-</h2>
-
 @if (GameContext.Game is not null)
 {
     <GameUi GameContext="@GameContext" />
 }
 else
 {
+    <h2 class="text-xl my-2 leading-8 md:mb-4">
+        <span class="hidden md:inline">Joining <strong>@GameId</strong> Pointing Party</span>
+    </h2>
+
     <EditForm Model="NameForm" OnValidSubmit="CreateGame" FormName="GameData">
         <DataAnnotationsValidator/>
         <div class="my-2">
@@ -24,7 +24,7 @@ else
                 <span class="text-xs font-medium text-gray-500 uppercase">
                     Your name:
                 </span>
-                <InputText @bind-Value="NameForm.Name" placeholder="Player Name" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"/>
+                <InputText @bind-Value="NameForm.Name" placeholder="Player Name" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-gray-700 dark:text-gray-400"/>
             </label>
         </div>
         <div>
@@ -34,7 +34,7 @@ else
 }
 
 <div class="text-center text-xs mt-2 md:mt-4">
-    <span class="text-gray-500">To invite participants, send them this link:</span><br/>
+    <span class="text-gray-500">To invite participants to the <strong>@GameId</strong> party, send them this link:</span><br/>
     <span class="font-medium">
         <a href="https://pointingparty.com/Game/@Uri.EscapeDataString(GameId)">pointingparty.com/Game/@Uri.EscapeDataString(GameId)</a>
     </span>
