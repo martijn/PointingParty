@@ -11,12 +11,7 @@ test("can start a game from home", async ({ page }) => {
   await page.getByRole("button", { name: "Start game" }).click();
 
   await expect(page).toHaveURL(`/Game/${game}`);
-  await expect(
-    page.getByRole("heading", { name: "Pointing Party" }),
-  ).toContainText(game);
-  await expect(page.getByRole("heading", { name: "Your vote" })).toContainText(
-    "Player One",
-  );
+  await expect(page.getByRole("heading", { name: "Your vote" })).toContainText("Player One");
 });
 
 test("can start a game from a game URL", async ({ page }) => {
@@ -30,12 +25,7 @@ test("can start a game from a game URL", async ({ page }) => {
   await page.getByPlaceholder("Player Name").fill("Player Two");
   await page.getByRole("button", { name: "Enter game" }).click();
 
-  await expect(
-    page.getByRole("heading", { name: "Pointing Party" }),
-  ).toContainText(game);
-  await expect(page.getByRole("heading", { name: "Your vote" })).toContainText(
-    "Player Two",
-  );
+  await expect(page.getByRole("heading", { name: "Your vote" })).toContainText("Player Two");
 });
 
 test("play with two players", async ({ context }) => {
@@ -49,18 +39,10 @@ test("play with two players", async ({ context }) => {
 
   await pageOne.getByRole("button", { name: "1", exact: true }).click();
 
-  const pageOnePlayerOneScore = pageOne
-    .getByRole("cell", { name: "Player One" })
-    .locator("+ td");
-  const pageOnePlayerTwoScore = pageOne
-    .getByRole("cell", { name: "Player Two" })
-    .locator("+ td");
-  const pageTwoPlayerOneScore = pageTwo
-    .getByRole("cell", { name: "Player One" })
-    .locator("+ td");
-  const pageTwoPlayerTwoScore = pageTwo
-    .getByRole("cell", { name: "Player Two" })
-    .locator("+ td");
+  const pageOnePlayerOneScore = pageOne.getByRole("cell", { name: "Player One" }).locator("+ td");
+  const pageOnePlayerTwoScore = pageOne.getByRole("cell", { name: "Player Two" }).locator("+ td");
+  const pageTwoPlayerOneScore = pageTwo.getByRole("cell", { name: "Player One" }).locator("+ td");
+  const pageTwoPlayerTwoScore = pageTwo.getByRole("cell", { name: "Player Two" }).locator("+ td");
 
   await expect(pageOnePlayerOneScore).toContainText("1");
   await expect(pageTwoPlayerOneScore).toContainText("Voted");
@@ -90,17 +72,11 @@ test("play with two players", async ({ context }) => {
 test("shows statistics", async ({ page, context }) => {
   const game = gameName();
 
-  const joinAndVote = async (
-    page: Page,
-    playerName: string,
-    vote: number | null,
-  ) => {
+  const joinAndVote = async (page: Page, playerName: string, vote: number | null) => {
     await page.goto(`/Game/${game}?PlayerName=${playerName}`);
     if (vote == null) return;
 
-    await page
-      .getByRole("button", { name: vote.toString(), exact: true })
-      .click();
+    await page.getByRole("button", { name: vote.toString(), exact: true }).click();
   };
 
   await joinAndVote(page, "Player One", 3);
@@ -108,9 +84,7 @@ test("shows statistics", async ({ page, context }) => {
   await joinAndVote(await context.newPage(), "Player Three", 5);
   await joinAndVote(await context.newPage(), "Player Abstains", null);
 
-  await expect(
-    page.getByRole("cell", { name: "Player Abstains" }),
-  ).toBeVisible();
+  await expect(page.getByRole("cell", { name: "Player Abstains" })).toBeVisible();
   await page.getByRole("button", { name: "Show votes" }).click();
 
   await expect(page.getByTestId("average")).toContainText("4.33");

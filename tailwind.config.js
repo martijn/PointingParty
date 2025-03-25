@@ -7,7 +7,7 @@ module.exports = {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/forms')],
   safelist: [
     { pattern: /bg-(blue|indigo|gray)-500/, variants: ['focus'] },
     { pattern: /border-(blue|indigo|gray)-200/ },
