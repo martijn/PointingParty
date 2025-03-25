@@ -23,4 +23,13 @@
         <ProjectReference Include="..\PointingParty.Domain\PointingParty.Domain.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <AdditionalFiles Include="Components\FatButton.razor" />
+      <AdditionalFiles Include="Components\GameUi.razor" />
+      <AdditionalFiles Include="Components\Pages\Game.razor" />
+      <AdditionalFiles Include="Components\ScoreGraph.razor" />
+      <AdditionalFiles Include="Components\VoteButton.razor" />
+      <AdditionalFiles Include="Components\_Imports.razor" />
+    </ItemGroup>
+
 </Project>
