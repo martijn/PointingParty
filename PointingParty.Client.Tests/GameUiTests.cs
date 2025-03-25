@@ -1,4 +1,5 @@
 using AngleSharp.Dom;
+using PointingParty.Client.Components;
 using PointingParty.Domain;
 using PointingParty.Domain.Events;
 

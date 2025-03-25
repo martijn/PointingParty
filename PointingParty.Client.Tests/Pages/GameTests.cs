@@ -1,6 +1,7 @@
 using Bunit.TestDoubles;
 using Microsoft.Extensions.DependencyInjection;
-using PointingParty.Client.Pages;
+using PointingParty.Client.Components;
+using PointingParty.Client.Components.Pages;
 using PointingParty.Domain;
 
 namespace PointingParty.Client.Tests.Pages;

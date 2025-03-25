@@ -1,5 +1,5 @@
 ﻿@using PointingParty.Components.Layout
-<Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Client._Imports).Assembly }">
+<Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Client.Components._Imports).Assembly }">
     <Found Context="routeData">
         <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)"/>
         <FocusOnNavigate RouteData="routeData" Selector="h1"/>

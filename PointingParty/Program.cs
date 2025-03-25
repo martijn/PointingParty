@@ -1,7 +1,7 @@
 using PointingParty;
 using PointingParty.Client;
 using PointingParty.Components;
-using _Imports = PointingParty.Client._Imports;
+using _Imports = PointingParty.Client.Components._Imports;
 
 var builder = WebApplication.CreateBuilder(args);
 
