@@ -34,10 +34,12 @@ else
 }
 
 <div class="text-center text-xs mt-2 md:mt-4">
-    <span class="text-gray-500">To invite participants to the <strong>@GameId</strong> party, send them this link:</span><br/>
+    <span class="text-gray-500">To invite participants, send them this link:</span><br/>
     <span class="font-medium">
         <a href="https://pointingparty.com/Game/@Uri.EscapeDataString(GameId)">pointingparty.com/Game/@Uri.EscapeDataString(GameId)</a>
-    </span>
+    </span><br/>
+    <span class="text-gray-500">or share the QR code (click to enlarge)</span><br/>
+    <QrCode GameId="@GameId"/>
 </div>
 
 @code {
