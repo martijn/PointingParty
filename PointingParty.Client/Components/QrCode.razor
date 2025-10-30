@@ -1,13 +1,11 @@
 @using QRCoder
-@using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.Components.Web
 @inject NavigationManager NavManager
 
 @if (_qrCode is not null)
 {
     <div class="mx-auto">
         <button class="p-0 bg-transparent border-0" @onclick="ShowModal" aria-label="Open QR code">
-            <img src="data:image/png;base64,@_qrCode" class="w-24" alt="QR code" />
+            <img src="data:image/png;base64,@_qrCode" class="w-24" alt="QR code"/>
         </button>
     </div>
 }
@@ -17,7 +15,7 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" tabindex="0"
          @onclick="HideModal" @onkeydown="HandleKeyDown">
         <div class="max-h-1/2 max-w-1/2 object-contain rounded shadow-lg cursor-zoom-out" @onclick="HideModal">
-            <img src="data:image/png;base64,@_qrCode" alt="QR code large" />
+            <img src="data:image/png;base64,@_qrCode" alt="QR code large"/>
         </div>
     </div>
 }
@@ -33,12 +31,10 @@
 
     protected override void OnParametersSet()
     {
-        var generator = new PayloadGenerator.Url(NavManager.BaseUri.TrimEnd('/') + "/Game/" + Uri.EscapeDataString(GameId));
-        var payload = generator.ToString();
-
-        var qrCodeData = _qrGenerator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.M);
-        var qrCode = new PngByteQRCode(qrCodeData);
-        _qrCode = Convert.ToBase64String(qrCode.GetGraphic(16));
+        var payload = new PayloadGenerator.Url(NavManager.BaseUri.TrimEnd('/') + "/Game/" + Uri.EscapeDataString(GameId));
+        var qrCodeData = _qrGenerator.CreateQrCode(payload);
+        var qrCode = new Base64QRCode(qrCodeData);
+        _qrCode = qrCode.GetGraphic(16);
 
         base.OnParametersSet();
     }
