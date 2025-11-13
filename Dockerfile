@@ -33,7 +33,7 @@ RUN set -ex; \
     ./tailwindcss -i PointingParty/wwwroot/app.css -o PointingParty/wwwroot/app.min.css --minify && rm PointingParty/wwwroot/app.css
 
 # build
-RUN dotnet publish --no-restore -c Release -o /app PointingParty
+RUN dotnet publish -c Release -o /app PointingParty
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}
