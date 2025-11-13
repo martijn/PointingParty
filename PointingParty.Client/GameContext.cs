@@ -46,7 +46,6 @@ public sealed class GameContext(ILogger<GameContext> logger, NavigationManager n
         HubConnectionState.Connected => ConnectionStatus.Connected,
         HubConnectionState.Connecting => ConnectionStatus.Connecting,
         HubConnectionState.Reconnecting => ConnectionStatus.Connecting,
-        HubConnectionState.Disconnected => ConnectionStatus.Failed,
         _ => ConnectionStatus.Failed
     };
 
@@ -86,8 +85,8 @@ public sealed class GameContext(ILogger<GameContext> logger, NavigationManager n
         _hubConnection.Reconnecting += OnHubConnectionReconnecting;
         _hubConnection.Reconnected += OnHubConnectionReconnected;
 
-        _hub = _hubConnection.ServerProxy<IGameEventHub>();
-        _hubConnection.ClientRegistration<IGameEventClient>(this);
+        _hub = new GameEventHubProxy(_hubConnection);
+        _hubConnection.On<IGameEvent>(nameof(IGameEventClient.ReceiveGameEvent), ReceiveGameEvent);
 
         await _hubConnection.StartAsync();
         logger.LogInformation("Hub connection State: {state} id: {id}", _hubConnection.State,
@@ -122,5 +121,13 @@ public sealed class GameContext(ILogger<GameContext> logger, NavigationManager n
         logger.LogInformation("Hub connection closed: {s}", s);
         OnStateChange?.Invoke();
         return Task.CompletedTask;
+    }
+
+    private sealed class GameEventHubProxy(HubConnection connection) : IGameEventHub
+    {
+        public Task BroadcastGameEvent(object gameEvent)
+        {
+            return connection.InvokeAsync(nameof(IGameEventHub.BroadcastGameEvent), gameEvent);
+        }
     }
 }
