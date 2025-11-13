@@ -1,22 +1,21 @@
 ARG DOTNET_VERSION=10.0
 
-FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
+RUN apt-get update && apt-get install -y python3 curl && rm -rf /var/lib/apt/lists/*
 RUN dotnet workload install wasm-tools
 WORKDIR /src
 
 # tailwind install
 RUN set -ex; \
-    apkArch="$(apk --print-arch)"; \
-    case "$apkArch" in \
-        aarch64) arch='linux-arm64' ;; \
-        x86_64) arch='linux-x64' ;; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        arm64) arch='linux-arm64' ;; \
+        amd64) arch='linux-x64' ;; \
     esac; \
-    echo Downloading tailwindcss for $apkArch ; \
+    echo Downloading tailwindcss for $arch ; \
     curl -sL -o tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-$arch; \
     chmod +x tailwindcss; \
     ls -al tailwindcss ;
-
-RUN apk add python3
 
 # restore
 COPY *.sln .
@@ -37,7 +36,7 @@ RUN set -ex; \
 RUN dotnet publish --no-restore -c Release -o /app PointingParty
 
 # final stage/image
-FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 EXPOSE 8080
