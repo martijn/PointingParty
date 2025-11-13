@@ -1,11 +1,11 @@
 @using QRCoder
 @inject NavigationManager NavManager
 
-@if (_qrCode is not null)
+@if (Code is not null)
 {
     <div class="mx-auto">
         <button class="p-0 bg-transparent border-0" @onclick="ShowModal" aria-label="Open QR code">
-            <img src="data:image/png;base64,@_qrCode" class="w-24" alt="QR code"/>
+            <img src="data:image/png;base64,@Code" class="w-24" alt="QR code"/>
         </button>
     </div>
 }
@@ -15,7 +15,7 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" tabindex="0"
          @onclick="HideModal" @onkeydown="HandleKeyDown">
         <div class="max-h-1/2 max-w-1/2 object-contain rounded shadow-lg cursor-zoom-out" @onclick="HideModal">
-            <img src="data:image/png;base64,@_qrCode" alt="QR code large"/>
+            <img src="data:image/png;base64,@Code" alt="QR code large"/>
         </div>
     </div>
 }
@@ -25,16 +25,21 @@
     [Parameter]
     public string GameId { get; set; } = "";
 
+    [PersistentState]
+    public string? Code { get; set; }
+
     private readonly QRCodeGenerator _qrGenerator = new();
-    private string? _qrCode;
     private bool _showModal;
 
     protected override void OnParametersSet()
     {
-        var payload = new PayloadGenerator.Url(NavManager.BaseUri.TrimEnd('/') + "/Game/" + Uri.EscapeDataString(GameId));
-        var qrCodeData = _qrGenerator.CreateQrCode(payload);
-        var qrCode = new Base64QRCode(qrCodeData);
-        _qrCode = qrCode.GetGraphic(16);
+        if (Code is null)
+        {
+            var payload = new PayloadGenerator.Url(NavManager.BaseUri.TrimEnd('/') + "/Game/" + Uri.EscapeDataString(GameId));
+            var qrCodeData = _qrGenerator.CreateQrCode(payload);
+            var qrCode = new Base64QRCode(qrCodeData);
+            Code = qrCode.GetGraphic(16);
+        }
 
         base.OnParametersSet();
     }
