@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject IHostEnvironment HostEnvironment
+
 <header class="flex flex-wrap md:justify-start md:flex-nowrap z-50 max-w-6xl mx-auto px-4 py-7">
     <nav class="relative max-w-7xl w-full flex flex-wrap md:grid md:grid-cols-12 basis-full items-center mx-auto" aria-label="Global">
         <div class="basis-full md:col-span-3">
@@ -37,7 +39,14 @@
 </main>
 
 <div id="blazor-error-ui">
-    An unhandled error has occurred.
+    @if (HostEnvironment.IsProduction())
+    {
+        <span>An error has occurred.</span>
+    }
+    else
+    {
+        <span>An unhandled exception occurred.</span>
+    }
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>

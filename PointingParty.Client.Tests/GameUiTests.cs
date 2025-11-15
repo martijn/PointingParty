@@ -2,6 +2,7 @@ using AngleSharp.Dom;
 using PointingParty.Client.Components;
 using PointingParty.Domain;
 using PointingParty.Domain.Events;
+using Syncfusion.Blazor;
 
 namespace PointingParty.Client.Tests;
 
@@ -18,6 +19,7 @@ public class GameUiTests : BunitContext
         _gameContext = Substitute.For<IGameContext>();
         _gameContext.Game = _game;
 
+        Services.AddSyncfusionBlazor();
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 

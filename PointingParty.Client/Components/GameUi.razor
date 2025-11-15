@@ -4,7 +4,7 @@
     Your vote, @GameContext.PlayerName:
 </h3>
 
-<div class="mb-4 grid gap-1 md:gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-5">
+<div class="mb-4 md:mb-6 grid gap-1 md:gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-5">
     <VoteButton OnClick="@(_ => Vote(1))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(1.0))">1</VoteButton>
     <VoteButton OnClick="@(_ => Vote(2))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(2.0))">2</VoteButton>
     <VoteButton OnClick="@(_ => Vote(3))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(3.0))">3</VoteButton>
@@ -69,22 +69,10 @@
         </div>
     </div>
     <div>
+        <ScoreGraph PlayerVotes="@(Game.State.ShowVotes ? @Game.State.PlayerVotes : [])" />
+
         @if (Game.State.ShowVotes)
         {
-            <ScoreGraph PlayerVotes="@Game.State.PlayerVotes"/>
-
-            if (Game.State.AverageVote() != default)
-            {
-                <div class="mb-2 text-center">
-                    <span class="text-xs font-medium text-gray-500 uppercase">
-                        Average score:
-                    </span>
-                    <span class="text-gray-800 dark:text-gray-200" data-testid="average">
-                        @Math.Round(Game.State.AverageVote(), 2)
-                    </span>
-                </div>
-            }
-
             <div class="self-center">
                 <div class="mb-2 text-xs font-medium text-gray-500 uppercase text-center">
                     Click 'Clear votes' to start the next round

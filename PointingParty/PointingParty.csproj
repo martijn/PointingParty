@@ -17,4 +17,12 @@
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.0" />
     </ItemGroup>
 
+    <!-- Embed license key into assembly metadata when provided at build-time -->
+    <ItemGroup Condition="'$(SyncfusionLicenseKey)' != ''">
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadata">
+        <_Parameter1>SyncfusionLicenseKey</_Parameter1>
+        <_Parameter2>$(SyncfusionLicenseKey)</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+
 </Project>

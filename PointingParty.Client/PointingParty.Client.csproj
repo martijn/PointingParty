@@ -10,17 +10,18 @@
         <InvariantGlobalization>true</InvariantGlobalization>
         <PublishTrimmed>true</PublishTrimmed>
         <TrimMode>partial</TrimMode>
+        <UserSecretsId>93b19d41-0109-4a95-95f7-044fbeac38d7</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Blazor-ApexCharts" Version="6.0.2" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
         <PackageReference Include="QRCoder" Version="1.7.0" />
+        <PackageReference Include="Syncfusion.Blazor.Charts" Version="31.2.10" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PointingParty.Domain\PointingParty.Domain.csproj"/>
+        <ProjectReference Include="..\PointingParty.Domain\PointingParty.Domain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -30,6 +31,14 @@
       <AdditionalFiles Include="Components\ScoreGraph.razor" />
       <AdditionalFiles Include="Components\VoteButton.razor" />
       <AdditionalFiles Include="Components\_Imports.razor" />
+    </ItemGroup>
+
+    <!-- Embed license key into assembly metadata when provided at build-time -->
+    <ItemGroup Condition="'$(SyncfusionLicenseKey)' != ''">
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadata">
+        <_Parameter1>SyncfusionLicenseKey</_Parameter1>
+        <_Parameter2>$(SyncfusionLicenseKey)</_Parameter2>
+      </AssemblyAttribute>
     </ItemGroup>
 
 </Project>
