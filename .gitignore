@@ -1,2 +1,7 @@
+obj/
+bin/
+/.idea
+/PointingParty.sln.DotSettings.user
+
 # Ignore local WASM appsettings containing license keys
 PointingParty.Client/wwwroot/appsettings.Development.json
