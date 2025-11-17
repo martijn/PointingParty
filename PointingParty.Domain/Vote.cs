@@ -35,7 +35,7 @@ public readonly struct Vote : IEquatable<Vote>, IEquatable<VoteStatus>, IEquatab
         {
             VoteStatus.Coffee => "☕️",
             VoteStatus.Question => "❓",
-            VoteStatus.Pending => "",
+            VoteStatus.Pending => "-",
             _ => Score.ToString()
         };
     }
