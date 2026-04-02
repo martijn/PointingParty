@@ -1,4 +1,5 @@
 @using PointingParty.Domain
+@inject IJSRuntime JS
 
 <h3 class="text-lg mb-2 text-center">
     Your vote, @GameContext.PlayerName:
@@ -97,10 +98,49 @@
 
     private GameAggregate Game => GameContext.Game ?? new GameAggregate();
 
+    private bool _previousShowVotes;
+
     protected override void OnInitialized()
     {
         Game.PlayerJoined();
         GameContext.PublishEvents();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Game.State.ShowVotes && !_previousShowVotes)
+        {
+            _previousShowVotes = true;
+            await TriggerConfettiIfUnanimous();
+        }
+        else if (!Game.State.ShowVotes)
+        {
+            _previousShowVotes = false;
+        }
+    }
+
+    private static readonly string[] ConfettiShapes = ["circle", "square", "star"];
+    private static readonly Random Random = new();
+
+    private async Task TriggerConfettiIfUnanimous()
+    {
+        var nonPendingVotes = Game.State.PlayerVotes.Values
+            .Where(v => v.Status != VoteStatus.Pending)
+            .ToList();
+
+        if (nonPendingVotes.Count > 1 && nonPendingVotes.All(v => v.Equals(nonPendingVotes[0])))
+        {
+            var totalPlayers = Game.State.PlayerVotes.Count;
+            var particleCount = (int)(30 + 170 * (nonPendingVotes.Count / (double)totalPlayers));
+            var shape = ConfettiShapes[Random.Next(ConfettiShapes.Length)];
+            await JS.InvokeVoidAsync("confetti", new
+            {
+                particleCount,
+                spread = 80,
+                origin = new { y = 0.8 },
+                shapes = new[] { shape }
+            });
+        }
     }
 
     private async Task Vote(double score)
