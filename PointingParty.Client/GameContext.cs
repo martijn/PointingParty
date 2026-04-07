@@ -36,7 +36,15 @@ public sealed class GameContext(ILogger<GameContext> logger, NavigationManager n
         logger.LogDebug("Publishing {count} events", Game.EventsToPublish.Count);
 
         foreach (var gameEvent in Game!.EventsToPublish)
-            _hub!.BroadcastGameEvent(gameEvent);
+        {
+            var toSend = gameEvent switch
+            {
+                VoteCast vc => vc with { Vote = VoteEncryption.Encrypt(vc.Vote) },
+                Sync s => s with { Vote = VoteEncryption.Encrypt(s.Vote) },
+                _ => gameEvent
+            };
+            _hub!.BroadcastGameEvent(toSend);
+        }
 
         Game.EventsToPublish.Clear();
     }
@@ -57,7 +65,15 @@ public sealed class GameContext(ILogger<GameContext> logger, NavigationManager n
     public Task ReceiveGameEvent(IGameEvent gameEvent)
     {
         logger.LogDebug("Received {eventType}: {e}", gameEvent.GetType(), gameEvent);
-        HandleGameEvent(gameEvent);
+        var decrypted = gameEvent switch
+        {
+            VoteCast vc when vc.Vote.EncryptedPayload is not null =>
+                vc with { Vote = VoteEncryption.Decrypt(vc.Vote) },
+            Sync s when s.Vote.EncryptedPayload is not null =>
+                s with { Vote = VoteEncryption.Decrypt(s.Vote) },
+            _ => gameEvent
+        };
+        HandleGameEvent(decrypted);
         return Task.CompletedTask;
     }
 

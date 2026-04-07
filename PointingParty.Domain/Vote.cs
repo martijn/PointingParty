@@ -12,6 +12,7 @@ public readonly struct Vote : IEquatable<Vote>, IEquatable<VoteStatus>, IEquatab
 {
     public double Score { get; init; }
     public VoteStatus Status { get; init; }
+    public string? EncryptedPayload { get; init; }
 
     public Vote()
     {
