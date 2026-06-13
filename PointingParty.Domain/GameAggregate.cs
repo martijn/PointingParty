@@ -66,7 +66,8 @@ public class GameAggregate
         State = State with
         {
             PlayerVotes = State.PlayerVotes.ToImmutableDictionary(pv => pv.Key, _ => new Vote(VoteStatus.Pending)),
-            ShowVotes = false
+            ShowVotes = false,
+            ShowConfetti = false
         };
     }
 
@@ -103,6 +104,10 @@ public class GameAggregate
 
     private void Apply(VoteCast e)
     {
+        // Once votes are revealed the round is locked; drop any further votes
+        // so a late or post-reveal vote can't alter the result.
+        if (State.ShowVotes) return;
+
         State = State with
         {
             PlayerVotes = State.PlayerVotes.SetItem(e.PlayerName, e.Vote)
@@ -111,7 +116,7 @@ public class GameAggregate
 
     private void Apply(VotesShown e)
     {
-        State = State with { ShowVotes = true };
+        State = State with { ShowVotes = true, ShowConfetti = e.ShowConfetti };
     }
 
     public void GameReset()
@@ -143,9 +148,9 @@ public class GameAggregate
         EventsToPublish.Add(voteCastEvent);
     }
 
-    public void VotesShown()
+    public void VotesShown(bool showConfetti)
     {
-        var showVotesEvent = new VotesShown(State.GameId);
+        var showVotesEvent = new VotesShown(State.GameId, showConfetti);
         Apply(showVotesEvent);
         EventsToPublish.Add(showVotesEvent);
     }

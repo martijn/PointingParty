@@ -98,7 +98,7 @@
 
     private GameAggregate Game => GameContext.Game ?? new GameAggregate();
 
-    private bool _previousShowVotes;
+    private bool _confettiShown;
 
     protected override void OnInitialized()
     {
@@ -108,39 +108,35 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (Game.State.ShowVotes && !_previousShowVotes)
+        if (!Game.State.ShowVotes)
         {
-            _previousShowVotes = true;
-            await TriggerConfettiIfUnanimous();
+            _confettiShown = false;
+            return;
         }
-        else if (!Game.State.ShowVotes)
+
+        // Whether to celebrate is decided once by the player who reveals the
+        // votes (see ShowVotes) and broadcast via the VotesShown event, so every
+        // client agrees regardless of the order votes and the reveal arrive in.
+        if (!_confettiShown && Game.State.ShowConfetti)
         {
-            _previousShowVotes = false;
+            _confettiShown = true;
+            await TriggerConfetti();
         }
     }
 
     private static readonly string[] ConfettiShapes = ["circle", "square", "star"];
     private static readonly Random Random = new();
 
-    private async Task TriggerConfettiIfUnanimous()
+    private async Task TriggerConfetti()
     {
-        var nonPendingVotes = Game.State.PlayerVotes.Values
-            .Where(v => v.Status != VoteStatus.Pending)
-            .ToList();
-
-        if (nonPendingVotes.Count > 1 && nonPendingVotes.All(v => v.Equals(nonPendingVotes[0])))
+        var shape = ConfettiShapes[Random.Next(ConfettiShapes.Length)];
+        await JS.InvokeVoidAsync("confetti", new
         {
-            var totalPlayers = Game.State.PlayerVotes.Count;
-            var particleCount = (int)(30 + 170 * (nonPendingVotes.Count / (double)totalPlayers));
-            var shape = ConfettiShapes[Random.Next(ConfettiShapes.Length)];
-            await JS.InvokeVoidAsync("confetti", new
-            {
-                particleCount,
-                spread = 80,
-                origin = new { y = 0.8 },
-                shapes = new[] { shape }
-            });
-        }
+            particleCount = 200,
+            spread = 80,
+            origin = new { y = 0.8 },
+            shapes = new[] { shape }
+        });
     }
 
     private async Task Vote(double score)
@@ -169,7 +165,7 @@
 
     private void ShowVotes()
     {
-        Game.VotesShown();
+        Game.VotesShown(Game.State.IsUnanimous());
         GameContext.PublishEvents();
     }
 }
