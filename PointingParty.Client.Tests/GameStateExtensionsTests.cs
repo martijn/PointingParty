@@ -85,14 +85,31 @@ public class GameStateExtensionsTests
     [InlineData(VoteStatus.Pending)]
     [InlineData(VoteStatus.Coffee)]
     [InlineData(VoteStatus.Question)]
-    public void Is_Not_Unanimous_When_A_Player_Has_Not_Cast_A_Numeric_Vote(VoteStatus vote)
+    public void Ignores_Abstaining_Players(VoteStatus abstention)
     {
-        // A pending vote may still be in transit, so an apparently unanimous
-        // result must not celebrate until every player has settled on a number.
+        // Players who did not cast a numeric vote are ignored, so the remaining
+        // numeric votes still count as unanimous.
         var state = StateWith(
             ("a", 2),
             ("b", 2),
-            ("c", vote));
+            ("c", abstention));
+
+        Assert.True(state.IsUnanimous());
+    }
+
+    [Theory]
+    [InlineData(VoteStatus.Pending)]
+    [InlineData(VoteStatus.Coffee)]
+    [InlineData(VoteStatus.Question)]
+    public void Is_Not_Unanimous_When_A_Numeric_Vote_Differs_Despite_An_Abstention(VoteStatus abstention)
+    {
+        // The scenario reported in the issue: 2, 2, 2, 1, abstained
+        var state = StateWith(
+            ("a", 2),
+            ("b", 2),
+            ("c", 2),
+            ("d", 1),
+            ("e", abstention));
 
         Assert.False(state.IsUnanimous());
     }

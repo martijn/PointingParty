@@ -14,23 +14,19 @@ public static class GameStateExtensions
     }
 
     /// <summary>
-    /// Returns true only when the round is fully settled and everyone agrees:
-    /// there is more than one player and every player has cast the same numeric
-    /// vote. A pending vote means a player has not voted yet or their vote is
-    /// still in transit, so the result is not settled and we must not celebrate
-    /// prematurely (which would otherwise fire confetti for a non-unanimous
-    /// round whenever a differing vote arrives just after the reveal).
+    /// Returns true when more than one player cast a numeric vote and every such
+    /// vote is the same. Players who abstained — i.e. did not vote (Pending) or
+    /// picked a non-numeric option (Coffee, Question) — are ignored.
+    /// This is evaluated by the player who reveals the votes (who has the full
+    /// picture) so the result is decided once and broadcast, rather than each
+    /// client re-deciding against its own, possibly incomplete, state.
     /// </summary>
     public static bool IsUnanimous(this GameState gameState)
     {
-        if (gameState.PlayerVotes.Count < 2)
-            return false;
+        var scoredVotes = gameState.PlayerVotes.Values
+            .Where(v => v.Status == VoteStatus.Scored)
+            .ToList();
 
-        var votes = gameState.PlayerVotes.Values;
-        if (votes.Any(v => v.Status != VoteStatus.Scored))
-            return false;
-
-        var first = votes.First();
-        return votes.All(v => v.Equals(first));
+        return scoredVotes.Count > 1 && scoredVotes.All(v => v.Equals(scoredVotes[0]));
     }
 }

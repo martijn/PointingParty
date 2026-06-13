@@ -114,10 +114,10 @@
             return;
         }
 
-        // Re-evaluate on every render while votes are shown (not just the reveal
-        // transition) so a unanimous result that only settles once a late vote
-        // arrives still celebrates, while a differing late vote never does.
-        if (!_confettiShown && Game.State.IsUnanimous())
+        // Whether to celebrate is decided once by the player who reveals the
+        // votes (see ShowVotes) and broadcast via the VotesShown event, so every
+        // client agrees regardless of the order votes and the reveal arrive in.
+        if (!_confettiShown && Game.State.ShowConfetti)
         {
             _confettiShown = true;
             await TriggerConfetti();
@@ -165,7 +165,7 @@
 
     private void ShowVotes()
     {
-        Game.VotesShown();
+        Game.VotesShown(Game.State.IsUnanimous());
         GameContext.PublishEvents();
     }
 }
