@@ -26,7 +26,7 @@ public class GameTests : BunitContext
         var nameInput = cut.Find("""input[placeholder="Player Name"]""");
         nameInput.Change("Player");
 
-        cut.Find("button").Click();
+        cut.Find("""button[type="submit"]""").Click();
 
         _gameContext.Received(1).CreateGame("Game", "Player");
         _gameContext.Received(1).Initialize(Arg.Any<Action>());

@@ -3,24 +3,33 @@
 
 @if (Code is not null)
 {
-    <div class="mx-auto">
-        <button class="p-0 bg-transparent border-0" @onclick="ShowModal" aria-label="Open QR code">
-            <img src="data:image/png;base64,@Code" class="w-24" alt="QR code"/>
-        </button>
-    </div>
+    <button type="button" class="pp-qr-card" @onclick="ShowModal" aria-label="Enlarge QR code">
+        @* Both polarities are rendered and cross-faded by the theme tokens, the same way the
+           logo swaps: the code is a baked image, so it cannot pick up a CSS variable. *@
+        <span class="pp-qr-stack">
+            <img class="pp-qr-dark" src="data:image/png;base64,@Code" alt="QR code to join this game"/>
+            <img class="pp-qr-light" src="data:image/png;base64,@LightCode" alt=""/>
+        </span>
+    </button>
 }
 
 @if (_showModal)
 {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" tabindex="0"
-         @onclick="HideModal" @onkeydown="HandleKeyDown">
-        <div class="max-h-1/2 max-w-1/2 object-contain rounded shadow-lg cursor-zoom-out" @onclick="HideModal">
-            <img src="data:image/png;base64,@Code" alt="QR code large"/>
-        </div>
+    <div class="pp-qr-modal" tabindex="0" @onclick="HideModal" @onkeydown="HandleKeyDown">
+        <img src="data:image/png;base64,@ModalCode" alt="QR code to join this game, enlarged"/>
     </div>
 }
 
 @code {
+
+    // Accent modules on the theme's own ground, so the code reads as part of the card rather
+    // than a pasted-in sticker. Dark is inverted (light modules on near-black); light is
+    // conventional polarity. Either way the enlarged copy below is plain black-on-white, so
+    // there is always a guaranteed-scannable version one tap away.
+    private const string DarkThemeModules = "#4FE3A8";
+    private const string DarkThemeGround = "#04100C";
+    private const string LightThemeModules = "#159B6C";
+    private const string LightThemeGround = "#FFFFFF";
 
     [Parameter]
     public string GameId { get; set; } = "";
@@ -28,24 +37,32 @@
     [PersistentState]
     public string? Code { get; set; }
 
+    [PersistentState]
+    public string? LightCode { get; set; }
+
     private readonly QRCodeGenerator _qrGenerator = new();
     private bool _showModal;
+    private string? ModalCode { get; set; }
 
     protected override void OnParametersSet()
     {
-        if (Code is null)
-        {
-            var payload = new PayloadGenerator.Url(NavManager.BaseUri.TrimEnd('/') + "/Game/" + Uri.EscapeDataString(GameId));
-            var qrCodeData = _qrGenerator.CreateQrCode(payload);
-            var qrCode = new Base64QRCode(qrCodeData);
-            Code = qrCode.GetGraphic(16);
-        }
+        Code ??= Render(DarkThemeModules, DarkThemeGround, false);
+        LightCode ??= Render(LightThemeModules, LightThemeGround, false);
 
         base.OnParametersSet();
     }
 
+    private string Render(string darkColor, string lightColor, bool quietZone)
+    {
+        var payload = new PayloadGenerator.Url(NavManager.BaseUri.TrimEnd('/') + "/Game/" + Uri.EscapeDataString(GameId));
+        // Level H keeps the inverted code readable even when a scanner struggles with polarity.
+        var qrCodeData = _qrGenerator.CreateQrCode(payload.ToString(), QRCodeGenerator.ECCLevel.H);
+        return new Base64QRCode(qrCodeData).GetGraphic(16, darkColor, lightColor, quietZone);
+    }
+
     private void ShowModal()
     {
+        ModalCode ??= Render("#000000", "#FFFFFF", true);
         _showModal = true;
     }
 

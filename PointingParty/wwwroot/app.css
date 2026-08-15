@@ -2,6 +2,986 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ------------------------------------------------------------------ *
+ * Theme tokens
+ *
+ * Dark is the default; light is opt-in through data-theme="light" on
+ * <html>. The attribute is always stamped by the bootstrap script in
+ * App.razor, which is also what Tailwind's dark: variant keys off (see
+ * tailwind.config.js), so both systems follow the same switch.
+ * ------------------------------------------------------------------ */
+:root {
+    --bg: #07100D;
+    --bg2: #0B1714;
+    --panel: rgba(255, 255, 255, 0.045);
+    --panel2: rgba(255, 255, 255, 0.028);
+    --border: rgba(255, 255, 255, 0.085);
+    --border2: rgba(255, 255, 255, 0.14);
+    --text: #E9F2EC;
+    --muted: #93A69E;
+    --faint: rgba(255, 255, 255, 0.06);
+    --acc: #4FE3A8;
+    --acc-dim: rgba(79, 227, 168, 0.16);
+    --acc-ink: #04241A;
+    --acc2: #7FB2FF;
+    --acc2-dim: rgba(127, 178, 255, 0.16);
+    --warn: #FFB454;
+    --danger: #F2789F;
+    --tile: rgba(255, 255, 255, 0.05);
+    --tile-edge: rgba(0, 0, 0, 0.55);
+    --is-dark: 1;
+    --is-light: 0;
+    --ava-l: 0.34;
+    --ava-c: 0.06;
+    --qr-bg: #04100C;
+    --qr-frame: rgba(79, 227, 168, 0.35);
+}
+
+[data-theme="light"] {
+    --bg: #F3F6F3;
+    --bg2: #FFFFFF;
+    --panel: rgba(255, 255, 255, 0.9);
+    --panel2: rgba(12, 32, 26, 0.02);
+    --border: rgba(12, 32, 26, 0.09);
+    --border2: rgba(12, 32, 26, 0.16);
+    --text: #0E1F1A;
+    --muted: #5C726A;
+    --faint: rgba(12, 32, 26, 0.05);
+    --acc: #159B6C;
+    --acc-dim: rgba(21, 155, 108, 0.12);
+    --acc-ink: #FFFFFF;
+    --acc2: #2F63C4;
+    --acc2-dim: rgba(47, 99, 196, 0.12);
+    --warn: #B26A00;
+    --danger: #C43D69;
+    --tile: #FFFFFF;
+    --tile-edge: rgba(12, 32, 26, 0.16);
+    --is-dark: 0;
+    --is-light: 1;
+    --ava-l: 0.90;
+    --ava-c: 0.045;
+    --qr-bg: #FFFFFF;
+    --qr-frame: rgba(21, 155, 108, 0.30);
+}
+
+@keyframes ppDrift {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(4vw, -3vh, 0) scale(1.12); }
+    100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes ppDrift2 {
+    0% { transform: translate3d(0, 0, 0) scale(1.05); }
+    50% { transform: translate3d(-5vw, 4vh, 0) scale(0.92); }
+    100% { transform: translate3d(0, 0, 0) scale(1.05); }
+}
+
+@keyframes ppPulse {
+    0%, 100% { opacity: .35; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.35); }
+}
+
+@keyframes ppLand {
+    0% { transform: scale(.7) translateY(8px); opacity: 0; }
+    60% { transform: scale(1.06) translateY(0); opacity: 1; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes ppRise {
+    0% { transform: translateY(10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes ppGrow {
+    0% { width: 0; }
+}
+
+/* ------------------------------------------------------------------ *
+ * Page frame
+ * ------------------------------------------------------------------ */
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+.pp-display {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    letter-spacing: -0.01em;
+}
+
+a {
+    color: var(--acc);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--text);
+}
+
+/* Ambient drifting glow + dot field behind the whole app. */
+.pp-backdrop {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.pp-backdrop span {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(30px);
+}
+
+.pp-backdrop .pp-glow-1 {
+    width: 60vw;
+    height: 60vw;
+    left: -14vw;
+    top: -22vw;
+    background: radial-gradient(circle at 50% 50%, var(--acc-dim), transparent 68%);
+    animation: ppDrift 26s ease-in-out infinite;
+}
+
+.pp-backdrop .pp-glow-2 {
+    width: 54vw;
+    height: 54vw;
+    right: -16vw;
+    top: 8vh;
+    background: radial-gradient(circle at 50% 50%, var(--acc2-dim), transparent 66%);
+    animation: ppDrift2 31s ease-in-out infinite;
+}
+
+.pp-backdrop .pp-dots {
+    position: absolute;
+    inset: 0;
+    border-radius: 0;
+    filter: none;
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 26px 26px;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .55), transparent 70%);
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .55), transparent 70%);
+}
+
+.pp-shell {
+    position: relative;
+    z-index: 1;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 22px 20px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 100vh;
+}
+
+.pp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.pp-header-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.pp-footer {
+    margin: 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ *
+ * Logo — both variants stacked, cross-faded by the theme tokens so no
+ * JS or duplicate markup is needed to swap them.
+ * ------------------------------------------------------------------ */
+.pp-logo {
+    position: relative;
+    display: block;
+    height: 34px;
+    width: 127px;
+    flex: none;
+}
+
+.pp-logo img {
+    position: absolute;
+    inset: 0;
+    height: 34px;
+    width: auto;
+}
+
+.pp-logo .pp-logo-dark { opacity: var(--is-dark); }
+.pp-logo .pp-logo-light { opacity: var(--is-light); }
+
+/* ------------------------------------------------------------------ *
+ * Pills, panels and buttons
+ * ------------------------------------------------------------------ */
+.pp-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--panel);
+    font-size: 13px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.pp-dot {
+    width: 7px;
+    height: 7px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--acc);
+    box-shadow: 0 0 0 4px var(--acc-dim);
+    animation: ppPulse 2.6s ease-in-out infinite;
+}
+
+.pp-dot-warn { background: var(--warn); box-shadow: 0 0 0 4px rgba(255, 180, 84, 0.16); }
+.pp-dot-danger { background: var(--danger); box-shadow: 0 0 0 4px rgba(242, 120, 159, 0.16); animation: none; }
+
+.pp-pill-strong {
+    color: var(--text);
+    font-weight: 500;
+}
+
+/* The game name carries the pill; the round trails it in the muted voice. */
+.pp-pill-name {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* ------------------------------------------------------------------ *
+ * Theme toggle
+ *
+ * One icon, not two: the sun's disc grows while a masked-out circle
+ * slides across it to carve the crescent, and the beams spin away. The
+ * whole morph is driven by the data-theme attribute, so the icon is
+ * already in the right state on the first paint.
+ * ------------------------------------------------------------------ */
+.pp-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .18s ease, border-color .18s ease, transform .12s ease;
+}
+
+.pp-theme-toggle:hover { color: var(--acc); border-color: var(--border2); }
+.pp-theme-toggle:active { transform: translateY(1px); }
+
+.pp-theme-toggle:focus-visible {
+    outline: none;
+    border-color: var(--acc);
+    box-shadow: 0 0 0 3px var(--acc-dim);
+}
+
+.pp-theme-icon {
+    width: 20px;
+    height: 20px;
+    overflow: visible;
+}
+
+.pp-theme-icon .pp-sun {
+    fill: currentColor;
+    transform-origin: center;
+    transition: transform .5s cubic-bezier(.5, 1.25, .75, 1.25);
+}
+
+.pp-theme-icon .pp-sun-beams {
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    transform-origin: center;
+    transition: transform .5s cubic-bezier(.5, 1.5, .75, 1.25), opacity .5s ease;
+}
+
+.pp-theme-icon mask circle {
+    transform-origin: center;
+    transition: transform .5s cubic-bezier(.5, 1.25, .75, 1.25);
+}
+
+/* Dark is the default, so the resting state is the moon. */
+.pp-theme-icon .pp-sun { transform: scale(1.75); }
+.pp-theme-icon .pp-sun-beams { opacity: 0; transform: rotate(-25deg); }
+.pp-theme-icon mask circle { transform: translateX(-7px); }
+
+[data-theme="light"] .pp-theme-icon .pp-sun { transform: scale(1); }
+[data-theme="light"] .pp-theme-icon .pp-sun-beams { opacity: 1; transform: rotate(0); }
+[data-theme="light"] .pp-theme-icon mask circle { transform: translateX(0); }
+
+.pp-panel {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 26px;
+    background: linear-gradient(160deg, var(--panel), var(--panel2));
+    padding: 22px;
+    backdrop-filter: blur(14px);
+}
+
+/* The two panels stack rather than squeeze — below 470px the deck would have
+   to drop to two columns, and a half-width deck reads worse than a full-width
+   one under the roster. */
+.pp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 470px), 1fr));
+    gap: 18px;
+    align-items: stretch;
+}
+
+.pp-panel-deck {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.pp-panel-table {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.pp-deck-head { margin-bottom: 18px; }
+
+.pp-panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pp-panel-head h1,
+.pp-panel-head h2 {
+    margin: 0;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.pp-hint {
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.pp-eyebrow {
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.pp-btn {
+    flex: 1;
+    padding: 15px 18px;
+    border-radius: 16px;
+    border: none;
+    background: var(--acc);
+    color: var(--acc-ink);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 5px 0 var(--tile-edge), 0 18px 30px -18px var(--acc);
+    transition: transform .14s cubic-bezier(.2, .9, .25, 1), box-shadow .14s ease, filter .2s ease;
+}
+
+.pp-btn:hover { filter: brightness(1.07); transform: translateY(-2px); }
+.pp-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--tile-edge); }
+
+.pp-btn-ghost {
+    flex: none;
+    padding: 15px 18px;
+    border-radius: 16px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: none;
+    transition: color .18s ease, border-color .18s ease, transform .14s ease;
+}
+
+.pp-btn-ghost:hover { color: var(--text); border-color: var(--text); filter: none; transform: none; }
+.pp-btn-ghost:active { transform: translateY(2px); box-shadow: none; }
+
+.pp-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 2px;
+}
+
+.pp-input {
+    display: block;
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border2);
+    background: var(--faint);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+}
+
+.pp-input::placeholder { color: var(--muted); }
+.pp-input:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 3px var(--acc-dim); }
+
+.pp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.pp-join .pp-panel-head { margin-bottom: 18px; }
+.pp-join .pp-actions { margin-top: 0; }
+.pp-join .pp-btn { flex: none; }
+
+.pp-hero {
+    padding: 40px 0 24px;
+}
+
+.pp-hero h1 {
+    margin: 0;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: clamp(34px, 6vw, 56px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+}
+
+.pp-hero p {
+    margin: 16px 0 0;
+    font-size: 18px;
+    color: var(--muted);
+}
+
+.pp-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    border-radius: 18px;
+    border: 1px solid var(--border2);
+    background: var(--faint);
+    color: var(--text);
+    font-size: 14px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Vote deck
+ *
+ * Ten cards divide evenly by five and by two and by nothing else, so the
+ * deck only ever uses those two track counts — auto-fit would leave an
+ * orphan row at common widths. The wrapper is the query container so the
+ * breakpoint is the deck's own width, not the viewport's.
+ * ------------------------------------------------------------------ */
+.pp-deck-wrap {
+    container-type: inline-size;
+    flex: 1;
+}
+
+.pp-deck {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 12px;
+    align-content: stretch;
+    height: 100%;
+}
+
+@container (min-width: 470px) {
+    .pp-deck { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+@supports not (container-type: inline-size) {
+    @media (min-width: 560px) {
+        .pp-deck { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    }
+}
+
+.pp-card {
+    --pp-accent: var(--acc);
+    --pp-fill: var(--acc-dim);
+    position: relative;
+    overflow: hidden;
+    min-height: 112px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    background: var(--tile);
+    color: var(--text);
+    cursor: pointer;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 2px;
+    box-shadow: 0 5px 0 var(--tile-edge), 0 14px 24px -14px rgba(0, 0, 0, .6);
+    transition: transform .16s cubic-bezier(.2, .9, .25, 1), box-shadow .16s ease, border-color .18s ease, background .18s ease;
+}
+
+.pp-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 0 var(--tile-edge), 0 22px 30px -16px rgba(0, 0, 0, .65);
+}
+
+.pp-card:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 var(--tile-edge), 0 6px 12px -10px rgba(0, 0, 0, .6);
+}
+
+/* Higher estimates take the blue accent, the two utility cards take the
+   muted one — the deck reads as three bands before you parse a digit. */
+.pp-card-high {
+    --pp-accent: var(--acc2);
+    --pp-fill: var(--acc2-dim);
+}
+
+.pp-card-util {
+    --pp-accent: var(--muted);
+    --pp-fill: var(--faint);
+}
+
+.pp-card-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    border: 2px solid var(--pp-accent);
+    background: var(--pp-fill);
+    opacity: 0;
+    transition: opacity .2s ease;
+}
+
+.pp-card-selected .pp-card-ring { opacity: 1; }
+
+/* One asset for every value: the cactus is scaled by the estimate, which
+   gives the deck a size gradient you can read without looking at digits. */
+.pp-card-mark {
+    position: absolute;
+    right: 6px;
+    bottom: 0;
+    opacity: .16;
+    transform-origin: 50% 100%;
+    transition: height .3s cubic-bezier(.2, .9, .25, 1), opacity .25s ease, transform .3s cubic-bezier(.2, .9, .25, 1);
+    pointer-events: none;
+}
+
+.pp-card-selected .pp-card-mark { opacity: .5; }
+
+.pp-card-value {
+    position: relative;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text);
+    transition: color .2s ease;
+}
+
+.pp-card-value-sm { font-size: 30px; }
+
+.pp-card-selected .pp-card-value,
+.pp-card-selected .pp-cup { color: var(--pp-accent); }
+
+.pp-card-caption {
+    position: relative;
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    min-height: 12px;
+}
+
+/* Drawn rather than an emoji so it inherits the theme colour and renders
+   identically on every platform. */
+.pp-cup {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 2px;
+    color: var(--text);
+    transition: color .2s ease;
+}
+
+.pp-cup i {
+    display: block;
+    width: 22px;
+    height: 17px;
+    border: 2.5px solid currentColor;
+    border-radius: 3px 3px 8px 8px;
+    transition: border-color .2s ease;
+}
+
+.pp-cup b {
+    display: block;
+    width: 8px;
+    height: 10px;
+    border: 2.5px solid currentColor;
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+    transition: border-color .2s ease;
+}
+
+.pp-progress {
+    position: relative;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.pp-progress-track {
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--faint);
+    overflow: hidden;
+}
+
+.pp-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--acc), var(--acc2));
+    transition: width .7s cubic-bezier(.2, .9, .25, 1);
+}
+
+.pp-progress-label {
+    font-size: 12px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ *
+ * Reveal — verdict, median, distribution
+ * ------------------------------------------------------------------ */
+.pp-reveal {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: ppRise .45s cubic-bezier(.2, .9, .25, 1) both;
+}
+
+.pp-verdict-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.pp-verdict {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.pp-verdict-tight { color: var(--acc); }
+.pp-verdict-split { color: var(--acc2); }
+
+.pp-median {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-radius: 16px;
+    border: 1px solid var(--border2);
+    background: var(--faint);
+    animation: ppLand .5s cubic-bezier(.2, .9, .25, 1) both;
+}
+
+.pp-median-label {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.pp-median-value {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+}
+
+.pp-note {
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.pp-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pp-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pp-bar-label {
+    width: 44px;
+    text-align: right;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.pp-bar-track {
+    flex: 1;
+    height: 30px;
+    border-radius: 10px;
+    background: var(--faint);
+    overflow: hidden;
+}
+
+.pp-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: var(--acc);
+    animation: ppGrow .85s cubic-bezier(.2, .9, .25, 1) both;
+}
+
+.pp-bar-high { background: var(--acc2); }
+.pp-bar-neutral { background: var(--muted); }
+
+.pp-bar-count {
+    width: 58px;
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ *
+ * Roster
+ * ------------------------------------------------------------------ */
+.pp-roster {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pp-roster-head {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.pp-player {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    background: transparent;
+    transition: background .3s ease, border-color .3s ease;
+}
+
+.pp-player-voted {
+    border-color: var(--border);
+    background: var(--faint);
+}
+
+/* Lightness and chroma come from the theme, only the hue comes from the
+   name — six avatars in a row read as one family, and contrast is a
+   property of the theme rather than of the hash. */
+.pp-avatar {
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    background: oklch(var(--ava-l) var(--ava-c) var(--pp-hue, 150));
+}
+
+.pp-avatar-me {
+    color: var(--acc-ink);
+    background: var(--acc);
+}
+
+.pp-player-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pp-player-state {
+    font-size: 12px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: opacity .25s ease;
+}
+
+.pp-player-value {
+    min-width: 34px;
+    text-align: right;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--acc);
+    transition: opacity .35s ease;
+}
+
+.pp-high { color: var(--acc2); }
+.pp-neutral { color: var(--muted); }
+
+/* ------------------------------------------------------------------ *
+ * Invite / QR
+ * ------------------------------------------------------------------ */
+.pp-invite {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+    align-items: center;
+    padding: 20px 22px;
+    /* backdrop-filter would make this panel the containing block for the
+       enlarged QR overlay, which has to cover the viewport. The panel sits over
+       the faded-out tail of the backdrop, so there is nothing to blur anyway. */
+    backdrop-filter: none;
+}
+
+.pp-invite-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pp-invite-link {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 19px;
+    font-weight: 500;
+    word-break: break-all;
+}
+
+.pp-invite-qr {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    justify-self: end;
+}
+
+.pp-invite-qr-label {
+    font-size: 12px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: right;
+}
+
+/* The card padding is the code's quiet zone, so it has to be the same colour
+   as the code's own ground — never the panel colour. Both grounds are theme
+   tokens: near-black in dark, white in light. */
+.pp-qr-card {
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--qr-bg);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .25), 0 18px 40px -22px rgba(0, 0, 0, .85), inset 0 0 30px -8px var(--qr-frame);
+    cursor: zoom-in;
+    line-height: 0;
+}
+
+.pp-qr-stack {
+    position: relative;
+    display: block;
+    width: 96px;
+    height: 96px;
+}
+
+.pp-qr-stack img {
+    position: absolute;
+    inset: 0;
+    width: 96px;
+    height: 96px;
+}
+
+.pp-qr-stack .pp-qr-dark { opacity: var(--is-dark); }
+.pp-qr-stack .pp-qr-light { opacity: var(--is-light); }
+
+.pp-qr-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(4, 16, 12, .72);
+    backdrop-filter: blur(6px);
+    cursor: zoom-out;
+}
+
+.pp-qr-modal img {
+    width: min(70vw, 70vh);
+    height: auto;
+    border-radius: 12px;
+    background: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pp-backdrop span,
+    .pp-dot,
+    .pp-reveal,
+    .pp-median,
+    .pp-bar-fill {
+        animation: none !important;
+    }
+
+    .pp-card,
+    .pp-btn,
+    .pp-progress-fill,
+    .pp-theme-icon .pp-sun,
+    .pp-theme-icon .pp-sun-beams,
+    .pp-theme-icon mask circle {
+        transition: none !important;
+    }
+}
+
 h1:focus {
     outline: none;
 }

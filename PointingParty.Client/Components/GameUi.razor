@@ -1,110 +1,217 @@
 @using PointingParty.Domain
 @inject IJSRuntime JS
 
-<h3 class="text-lg mb-2 text-center">
-    Your vote, @GameContext.PlayerName:
-</h3>
-
-<div class="mb-4 md:mb-6 grid gap-1 md:gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-5">
-    <VoteButton OnClick="@(_ => Vote(1))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(1.0))">1</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(2))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(2.0))">2</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(3))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(3.0))">3</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(5))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(5.0))">5</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(8))" Color="VoteButton.ButtonColor.Blue" Selected="@(Game.CurrentVote.Equals(8.0))">8</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(13))" Color="VoteButton.ButtonColor.Indigo" Selected="@(Game.CurrentVote.Equals(13.0))">13</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(21))" Color="VoteButton.ButtonColor.Indigo" Selected="@(Game.CurrentVote.Equals(21.0))">21</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(34))" Color="VoteButton.ButtonColor.Indigo" Selected="@(Game.CurrentVote.Equals(34.0))">34</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(VoteStatus.Question))" Color="VoteButton.ButtonColor.Gray" Selected="@(Game.CurrentVote.Equals(VoteStatus.Question))">❓</VoteButton>
-    <VoteButton OnClick="@(_ => Vote(VoteStatus.Coffee))" Color="VoteButton.ButtonColor.Gray" Selected="@(Game.CurrentVote.Equals(VoteStatus.Coffee))">☕️</VoteButton>
-</div>
-
 @if (GameContext.Status != ConnectionStatus.Connected)
 {
-    <div class="bg-gray-800 text-sm text-white rounded-lg p-4 dark:bg-white dark:text-gray-800 mb-4" role="alert">
+    <div class="pp-alert" role="alert">
         @if (GameContext.Status == ConnectionStatus.Connecting)
         {
-            <span class="font-bold"><span class="animate-pulse">⚠️</span> Connection issue detected, attempting to reconnect…</span>
+            <span class="pp-dot pp-dot-warn"></span>
+            <span>Connection issue detected, attempting to reconnect…</span>
         }
         else
         {
-            <span class="font-bold">⛔️ Connection lost. Please reload browser window to continue.</span>
+            <span class="pp-dot pp-dot-danger"></span>
+            <span>Connection lost. Please reload this window to continue.</span>
         }
     </div>
 }
 
-<h3 class="text-lg mb-2 text-center">
-    Results for this round:
-</h3>
+<div class="pp-grid">
 
-<div class="md:grid grid-cols-3 gap-4">
-    <div>
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" data-testid="results">
-            <thead>
-            <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Player</th>
-            <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vote</th>
-            </thead>
-            <tbody>
-            @foreach (var (player, vote) in Game.State.PlayerVotes.OrderBy(x => x.Key))
-            {
-                <tr>
-                    <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200">@player</td>
-                    <td class="px-6 py-3 whitespace-nowrap text-gray-800 dark:text-gray-200" data-testid="vote-for-@player">
-                        @if (vote.Status != VoteStatus.Pending && player != GameContext.PlayerName && !Game.State.ShowVotes)
-                        {
-                            <span>Voted!</span>
-                        }
-                        else
-                        {
-                            @vote
-                        }
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </div>
-    <div class="self-center py-4">
-        <div class="text-center">
-            <FatButton OnClick="ShowVotes">Show votes</FatButton>
-            <FatButton OnClick="ClearVotes">Clear votes</FatButton>
+    <section class="pp-panel pp-panel-deck">
+        <div class="pp-panel-head pp-deck-head">
+            <h1>Your estimate</h1>
+            <span class="pp-hint">@DeckHint</span>
         </div>
-    </div>
-    <div>
-        <ScoreGraph PlayerVotes="@(Game.State.ShowVotes ? @Game.State.PlayerVotes : [])" />
 
+        <div class="pp-deck-wrap">
+            <div class="pp-deck">
+                @foreach (var card in Deck)
+                {
+                    <VoteCard Value="@card"
+                              Selected="@(Game.CurrentVote == card)"
+                              OnClick="@(() => Vote(card))"/>
+                }
+            </div>
+        </div>
+
+        <div class="pp-progress">
+            <div class="pp-progress-track">
+                <div class="pp-progress-fill" style="width: @(VotedPercentage)%;"></div>
+            </div>
+            <span class="pp-progress-label">@VotesCast / @PlayerCount voted</span>
+        </div>
+    </section>
+
+    <section class="pp-panel pp-panel-table">
         @if (Game.State.ShowVotes)
         {
-            <div class="self-center">
-                <div class="mb-2 text-xs font-medium text-gray-500 uppercase text-center">
-                    Click 'Clear votes' to start the next round
+            var summary = Game.State.Summarize();
+            <div class="pp-reveal">
+                <div class="pp-verdict-row">
+                    <div>
+                        <div class="pp-eyebrow">Verdict</div>
+                        <div class="pp-verdict @VerdictClass(summary.Verdict)" data-testid="verdict">@VerdictLabel(summary.Verdict)</div>
+                    </div>
+                    <div class="pp-median">
+                        <span class="pp-median-label">Median</span>
+                        <span class="pp-median-value" data-testid="median">@(summary.Median?.ToString() ?? "–")</span>
+                    </div>
+                </div>
+                <div class="pp-note">@summary.Note</div>
+                <div class="pp-bars">
+                    @foreach (var (bar, index) in Distribution().Select((bar, index) => (bar, index)))
+                    {
+                        <div class="pp-bar-row">
+                            <span class="pp-bar-label">@bar.Vote</span>
+                            <div class="pp-bar-track">
+                                <div class="pp-bar-fill @BarClass(bar.Vote)"
+                                     style="width: @(bar.Percentage)%; animation-delay: @(index * 90)ms;"></div>
+                            </div>
+                            <span class="pp-bar-count">@bar.Count @(bar.Count == 1 ? "vote" : "votes")</span>
+                        </div>
+                    }
                 </div>
             </div>
         }
-        else
-        {
-            <div class="self-center">
-                <div class="mb-2 text-xs font-medium text-gray-500 uppercase text-center">
-                    Click 'Show votes' to see results
-                </div>
+
+        <div>
+            <div class="pp-panel-head pp-roster-head">
+                <h2>Around the table</h2>
+                <span class="pp-hint">@TableStatus</span>
             </div>
-        }
-    </div>
+            <div class="pp-roster" data-testid="results">
+                @foreach (var (player, vote) in Players())
+                {
+                    var isMe = player == GameContext.PlayerName;
+                    var hasVoted = vote.Status != VoteStatus.Pending;
+                    var revealed = Game.State.ShowVotes && hasVoted;
+
+                    <div class="pp-player @(hasVoted ? "pp-player-voted" : "")" data-testid="player-row-@player">
+                        <span class="pp-avatar @(isMe ? "pp-avatar-me" : "")" style="--pp-hue: @PlayerAvatar.Hue(player);">@PlayerAvatar.Initials(player)</span>
+                        <span class="pp-player-name">@(isMe ? $"{player} (you)" : player)</span>
+                        <span class="pp-player-state" style="opacity: @(revealed ? 0 : 1);" data-testid="state-for-@player">@(revealed ? "" : hasVoted ? "ready" : "thinking…")</span>
+                        <span class="pp-player-value @VoteClass(vote)" style="opacity: @(revealed ? 1 : 0);" data-testid="vote-for-@player">@(revealed ? vote.ToString() : "")</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="pp-actions">
+            @if (Game.State.ShowVotes)
+            {
+                <FatButton OnClick="ClearVotes">Next story</FatButton>
+            }
+            else
+            {
+                <FatButton OnClick="ShowVotes">Reveal votes</FatButton>
+                <FatButton OnClick="ClearVotes" Ghost="true">New round</FatButton>
+            }
+        </div>
+    </section>
 </div>
 
 @code {
 
+    private static readonly Vote[] Deck =
+    [
+        new(1), new(2), new(3), new(5), new(8), new(13), new(21), new(34),
+        new(VoteStatus.Question), new(VoteStatus.Coffee)
+    ];
+
     [Parameter]
     public IGameContext GameContext { get; set; } = default!;
 
+    /// <summary>
+    /// Raised after a local action changes the game. Remote events already re-render the page
+    /// through the context's change handler, but local ones only re-render this component — and
+    /// the page header shows the round number, which a local reset moves on.
+    /// </summary>
+    [Parameter]
+    public EventCallback GameChanged { get; set; }
+
     private GameAggregate Game => GameContext.Game ?? new GameAggregate();
 
-    private bool _previousShowVotes;
+    private int PlayerCount => Game.State.PlayerVotes.Count;
+
+    private int VotesCast => Game.State.PlayerVotes.Count(x => x.Value.Status != VoteStatus.Pending);
+
+    private int VotedPercentage => PlayerCount == 0 ? 0 : (int)Math.Round(100.0 * VotesCast / PlayerCount);
+
+    private string DeckHint => Game.State.ShowVotes
+        ? "locked for this round"
+        : Game.CurrentVote.Status == VoteStatus.Pending
+            ? "tap a value"
+            : "change any time until reveal";
+
+    private string TableStatus => Game.State.ShowVotes
+        ? "cards on the table"
+        : VotesCast == PlayerCount && PlayerCount > 0
+            ? "everyone in — ready to reveal"
+            : $"waiting on {PlayerCount - VotesCast} of {PlayerCount}";
+
+    /// <summary>
+    /// The local player first — "you" should always be findable without reading — then the rest
+    /// alphabetically so the roster is stable across clients.
+    /// </summary>
+    private IEnumerable<KeyValuePair<string, Vote>> Players()
+    {
+        return Game.State.PlayerVotes
+            .OrderByDescending(x => x.Key == GameContext.PlayerName)
+            .ThenBy(x => x.Key);
+    }
+
+    private record Bar(Vote Vote, int Count, int Percentage);
+
+    private List<Bar> Distribution()
+    {
+        var groups = Game.State.PlayerVotes.Values
+            .Where(v => v.Status != VoteStatus.Pending)
+            .GroupBy(v => v)
+            .OrderBy(g => g.Key)
+            .ToList();
+
+        if (groups.Count == 0) return [];
+
+        var max = groups.Max(g => g.Count());
+        return groups
+            .Select(g => new Bar(g.Key, g.Count(), (int)Math.Round(100.0 * g.Count() / max)))
+            .ToList();
+    }
+
+    private static string VerdictLabel(Verdict verdict) => verdict switch
+    {
+        Verdict.Unanimous => "Unanimous",
+        Verdict.Tight => "Tight",
+        Verdict.CloseEnough => "Close enough",
+        _ => "Split"
+    };
+
+    private static string VerdictClass(Verdict verdict) =>
+        verdict is Verdict.Unanimous or Verdict.Tight ? "pp-verdict-tight" : "pp-verdict-split";
+
+    private static string BarClass(Vote vote) => vote.Status switch
+    {
+        VoteStatus.Scored when vote.Score > 8 => "pp-bar-high",
+        VoteStatus.Scored => "",
+        _ => "pp-bar-neutral"
+    };
+
+    private static string VoteClass(Vote vote) => vote.Status switch
+    {
+        VoteStatus.Scored when vote.Score > 8 => "pp-high",
+        VoteStatus.Scored => "",
+        _ => "pp-neutral"
+    };
 
     protected override void OnInitialized()
     {
         Game.PlayerJoined();
         GameContext.PublishEvents();
     }
+
+    private bool _previousShowVotes;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -120,6 +227,7 @@
     }
 
     private static readonly string[] ConfettiShapes = ["circle", "square", "star"];
+    private static readonly string[] ConfettiColors = ["#4FE3A8", "#7FB2FF", "#E9F2EC"];
     private static readonly Random Random = new();
 
     private async Task TriggerConfettiIfUnanimous()
@@ -130,46 +238,41 @@
 
         if (nonPendingVotes.Count > 1 && nonPendingVotes.All(v => v.Equals(nonPendingVotes[0])))
         {
-            var totalPlayers = Game.State.PlayerVotes.Count;
-            var particleCount = (int)(30 + 170 * (nonPendingVotes.Count / (double)totalPlayers));
+            var particleCount = (int)(30 + 170 * (nonPendingVotes.Count / (double)PlayerCount));
             var shape = ConfettiShapes[Random.Next(ConfettiShapes.Length)];
             await JS.InvokeVoidAsync("confetti", new
             {
                 particleCount,
                 spread = 80,
                 origin = new { y = 0.8 },
-                shapes = new[] { shape }
+                shapes = new[] { shape },
+                colors = ConfettiColors
             });
         }
     }
 
-    private async Task Vote(double score)
+    private async Task Vote(Vote vote)
     {
         if (Game.State.ShowVotes) return;
 
-        Game.VoteCast(score);
+        Game.VoteCast(vote);
         await InvokeAsync(StateHasChanged);
         GameContext.PublishEvents();
+        await GameChanged.InvokeAsync();
     }
 
-    private async Task Vote(VoteStatus status)
-    {
-        if (Game.State.ShowVotes) return;
-
-        Game.VoteCast(status);
-        await InvokeAsync(StateHasChanged);
-        GameContext.PublishEvents();
-    }
-
-    private void ClearVotes()
+    private async Task ClearVotes()
     {
         Game.GameReset();
         GameContext.PublishEvents();
+        await GameChanged.InvokeAsync();
     }
 
-    private void ShowVotes()
+    private async Task ShowVotes()
     {
         Game.VotesShown();
         GameContext.PublishEvents();
+        await GameChanged.InvokeAsync();
     }
+
 }
