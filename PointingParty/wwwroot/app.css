@@ -33,6 +33,11 @@
     --is-light: 0;
     --ava-l: 0.34;
     --ava-c: 0.06;
+    --tint-l: 0.78;
+    --tint-c: 0.13;
+    --back: rgba(255, 255, 255, 0.07);
+    --back2: rgba(255, 255, 255, 0.02);
+    --card-frame: rgba(233, 242, 236, 0.9);
     --qr-bg: #04100C;
     --qr-frame: rgba(79, 227, 168, 0.35);
 }
@@ -60,6 +65,13 @@
     --is-light: 1;
     --ava-l: 0.90;
     --ava-c: 0.045;
+    --tint-l: 0.62;
+    --tint-c: 0.12;
+    /* The card backs are the one place the light theme goes dark: a face-down card should
+       read as a card, not as a hole in the panel. */
+    --back: #0E1F1A;
+    --back2: #16302A;
+    --card-frame: rgba(255, 255, 255, 0.92);
     --qr-bg: #FFFFFF;
     --qr-frame: rgba(21, 155, 108, 0.30);
 }
@@ -92,8 +104,20 @@
     100% { transform: translateY(0); opacity: 1; }
 }
 
-@keyframes ppGrow {
-    0% { width: 0; }
+@keyframes ppPop {
+    0% { transform: scale(.4); opacity: 0; }
+    70% { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes ppDots {
+    0%, 80%, 100% { opacity: .22; }
+    40% { opacity: 1; }
+}
+
+@keyframes ppSweep {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(320%); }
 }
 
 /* ------------------------------------------------------------------ *
@@ -256,11 +280,80 @@ a:hover {
     font-weight: 500;
 }
 
-/* The game name carries the pill; the round trails it in the muted voice. */
+/* The game name carries the pill; the connection state trails it in the muted voice. */
 .pp-pill-name {
     font-family: 'Space Grotesk', system-ui, sans-serif;
     font-weight: 700;
     color: var(--text);
+}
+
+.pp-pill-dot { opacity: .5; }
+
+.pp-pill-round {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.pp-pill-rule {
+    width: 1px;
+    height: 14px;
+    background: var(--border2);
+}
+
+/* ------------------------------------------------------------------ *
+ * Session strip — one chip per finished round
+ *
+ * Local to this browser: there is no shared clock and nothing is
+ * persisted, so a player who joins late starts with an empty strip,
+ * exactly as they start at round one.
+ * ------------------------------------------------------------------ */
+.pp-timeline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: linear-gradient(160deg, var(--panel), var(--panel2));
+    overflow-x: auto;
+}
+
+.pp-timeline > * { flex: none; }
+
+.pp-timeline-label { white-space: nowrap; }
+
+.pp-timeline-rule {
+    width: 1px;
+    height: 16px;
+    background: var(--border2);
+}
+
+.pp-timeline-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 10px 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--faint);
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.pp-timeline-median {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.pp-timeline-pace {
+    margin-left: auto;
+    padding-left: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
 }
 
 /* ------------------------------------------------------------------ *
@@ -338,14 +431,15 @@ a:hover {
     backdrop-filter: blur(14px);
 }
 
-/* The two panels stack rather than squeeze — below 470px the deck would have
+/* The two panels stack rather than squeeze — below 460px the deck would have
    to drop to two columns, and a half-width deck reads worse than a full-width
-   one under the roster. */
+   one under the table. Each panel keeps its own height: the deck is a fixed
+   ten cards, while the table grows by a head when the votes come over. */
 .pp-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 470px), 1fr));
-    gap: 18px;
-    align-items: stretch;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+    gap: 16px;
+    align-items: start;
 }
 
 .pp-panel-deck {
@@ -357,10 +451,10 @@ a:hover {
 .pp-panel-table {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 
-.pp-deck-head { margin-bottom: 18px; }
+.pp-deck-head { margin-bottom: 16px; }
 
 .pp-panel-head {
     display: flex;
@@ -500,16 +594,13 @@ a:hover {
  * ------------------------------------------------------------------ */
 .pp-deck-wrap {
     container-type: inline-size;
-    flex: 1;
 }
 
 .pp-deck {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: 1fr;
+    grid-auto-rows: 124px;
     gap: 12px;
-    align-content: stretch;
-    height: 100%;
 }
 
 @container (min-width: 470px) {
@@ -522,12 +613,14 @@ a:hover {
     }
 }
 
+/* Every card carries its own point on the deck's colour ramp; --pp-tint is set
+   inline from the value, and the strip, the ring and the selected numeral all
+   read from it. */
 .pp-card {
-    --pp-accent: var(--acc);
-    --pp-fill: var(--acc-dim);
+    --pp-tint: var(--muted);
     position: relative;
     overflow: hidden;
-    min-height: 112px;
+    height: 100%;
     border-radius: 20px;
     border: 1px solid var(--border2);
     background: var(--tile);
@@ -553,24 +646,27 @@ a:hover {
     box-shadow: 0 1px 0 var(--tile-edge), 0 6px 12px -10px rgba(0, 0, 0, .6);
 }
 
-/* Higher estimates take the blue accent, the two utility cards take the
-   muted one — the deck reads as three bands before you parse a digit. */
-.pp-card-high {
-    --pp-accent: var(--acc2);
-    --pp-fill: var(--acc2-dim);
+/* A sliver of the card's colour, always lit — the deck reads as a ramp from
+   cool green to warm blue before you parse a single digit. */
+.pp-card-strip {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 9px;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--pp-tint);
+    opacity: .3;
+    transition: opacity .25s ease;
 }
 
-.pp-card-util {
-    --pp-accent: var(--muted);
-    --pp-fill: var(--faint);
-}
+.pp-card-selected .pp-card-strip { opacity: 1; }
 
 .pp-card-ring {
     position: absolute;
     inset: 0;
     border-radius: 20px;
-    border: 2px solid var(--pp-accent);
-    background: var(--pp-fill);
+    border: 2px solid var(--pp-tint);
     opacity: 0;
     transition: opacity .2s ease;
 }
@@ -578,18 +674,35 @@ a:hover {
 .pp-card-selected .pp-card-ring { opacity: 1; }
 
 /* One asset for every value: the cactus is scaled by the estimate, which
-   gives the deck a size gradient you can read without looking at digits. */
-.pp-card-mark {
+   gives the deck a size gradient you can read without looking at digits. A 1
+   is a smooth little pad; by 34 the thing bristles. */
+.pp-card-plant {
     position: absolute;
-    right: 6px;
+    right: 14px;
     bottom: 0;
+    aspect-ratio: 351 / 526;
     opacity: .16;
     transform-origin: 50% 100%;
     transition: height .3s cubic-bezier(.2, .9, .25, 1), opacity .25s ease, transform .3s cubic-bezier(.2, .9, .25, 1);
     pointer-events: none;
 }
 
-.pp-card-selected .pp-card-mark { opacity: .5; }
+.pp-card-selected .pp-card-plant { opacity: .5; }
+
+.pp-card-plant img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* The cactus green is baked into the mark's own fills, so the spines match it
+   literally rather than through a token. */
+.pp-spine {
+    position: absolute;
+    background: #4FE3A8;
+    transform-origin: 0 50%;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
 
 .pp-card-value {
     position: relative;
@@ -604,7 +717,7 @@ a:hover {
 .pp-card-value-sm { font-size: 30px; }
 
 .pp-card-selected .pp-card-value,
-.pp-card-selected .pp-cup { color: var(--pp-accent); }
+.pp-card-selected .pp-cup { color: var(--pp-tint); }
 
 .pp-card-caption {
     position: relative;
@@ -655,11 +768,25 @@ a:hover {
 }
 
 .pp-progress-track {
+    position: relative;
     flex: 1;
     height: 6px;
     border-radius: 999px;
     background: var(--faint);
     overflow: hidden;
+}
+
+/* Only rendered while the table is mid-vote: a bar that is empty or full is
+   not waiting on anybody. */
+.pp-progress-sweep {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 34%;
+    height: 100%;
+    opacity: .35;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent);
+    animation: ppSweep 1.9s ease-in-out infinite;
 }
 
 .pp-progress-fill {
@@ -685,6 +812,8 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
     animation: ppRise .45s cubic-bezier(.2, .9, .25, 1) both;
 }
 
@@ -698,7 +827,7 @@ a:hover {
 
 .pp-verdict {
     font-family: 'Space Grotesk', system-ui, sans-serif;
-    font-size: 40px;
+    font-size: 36px;
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.02em;
@@ -738,83 +867,256 @@ a:hover {
     color: var(--muted);
 }
 
-.pp-bars {
+/* The distribution is drawn on the deck's own scale rather than only on the
+   values that were played, so an empty column between two busy ones reads as
+   a gap in the table's thinking instead of as missing data. */
+.pp-scale {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 6px;
+    align-items: end;
+    padding: 14px 12px 0;
+    border-radius: 18px;
+    background: var(--faint);
+}
+
+.pp-scale-col {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-}
-
-.pp-bar-row {
-    display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
 }
 
-.pp-bar-label {
-    width: 44px;
-    text-align: right;
+.pp-scale-stack {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    gap: 4px;
+    min-height: var(--pp-stack, 30px);
+}
+
+.pp-chip {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-family: 'Space Grotesk', system-ui, sans-serif;
-    font-size: 17px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: default;
+    color: var(--text);
+    background: oklch(var(--ava-l) var(--ava-c) var(--pp-hue, 150));
+    animation: ppPop .4s cubic-bezier(.2, .9, .25, 1) both;
+}
+
+.pp-chip-me {
+    color: var(--acc-ink);
+    background: var(--acc);
+}
+
+/* Two initials are enough to find yourself in the stack but not always enough
+   to name a colleague, so the full name is one hover away. */
+.pp-chip-tip {
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px 9px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .15s ease;
+    box-shadow: 0 8px 18px -12px rgba(0, 0, 0, .8);
+}
+
+.pp-chip:hover { z-index: 20; }
+.pp-chip:hover .pp-chip-tip { opacity: 1; }
+
+.pp-scale-tick {
+    width: 100%;
+    height: 3px;
+    border-radius: 999px;
+}
+
+.pp-scale-label {
+    padding-bottom: 12px;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text);
 }
 
-.pp-bar-track {
-    flex: 1;
-    height: 30px;
-    border-radius: 10px;
-    background: var(--faint);
-    overflow: hidden;
-}
-
-.pp-bar-fill {
-    height: 100%;
-    border-radius: 10px;
-    background: var(--acc);
-    animation: ppGrow .85s cubic-bezier(.2, .9, .25, 1) both;
-}
-
-.pp-bar-high { background: var(--acc2); }
-.pp-bar-neutral { background: var(--muted); }
-
-.pp-bar-count {
-    width: 58px;
-    font-size: 12px;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    white-space: nowrap;
-}
+.pp-scale-label-empty { color: var(--muted); }
 
 /* ------------------------------------------------------------------ *
- * Roster
+ * Around the table
+ *
+ * One card per player, face down until the reveal. The card is the whole
+ * status display: dashed and empty while they think, backed and ticked
+ * once they are in, flipped over when the votes come over.
  * ------------------------------------------------------------------ */
-.pp-roster {
+.pp-seats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pp-seat {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    gap: 8px;
+    width: 74px;
 }
 
-.pp-roster-head {
-    padding-bottom: 12px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--border);
+.pp-seat-card {
+    --pp-tint: var(--muted);
+    position: relative;
+    width: 74px;
+    height: 98px;
+    perspective: 800px;
 }
 
-.pp-player {
+.pp-seat-flip {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform .6s cubic-bezier(.3, .9, .3, 1);
+    /* Staggered by seat order, so the table turns over as a ripple rather
+       than as one flat snap. */
+    transition-delay: var(--pp-flip-delay, 0ms);
+}
+
+.pp-seat-open .pp-seat-flip { transform: rotateY(180deg); }
+
+.pp-seat-back,
+.pp-seat-face {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 9px 12px;
+    justify-content: center;
     border-radius: 16px;
-    border: 1px solid transparent;
-    background: transparent;
-    transition: background .3s ease, border-color .3s ease;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
-.pp-player-voted {
-    border-color: var(--border);
+.pp-seat-back {
+    overflow: hidden;
+    border: 1px dashed var(--border2);
     background: var(--faint);
+    transition: background .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+
+.pp-seat-in .pp-seat-back {
+    border: 1px solid var(--acc-dim);
+    background: linear-gradient(152deg, var(--back2), var(--back));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), 0 4px 0 var(--tile-edge), 0 16px 26px -18px rgba(0, 0, 0, .7);
+}
+
+.pp-seat-frame {
+    position: absolute;
+    inset: 5px;
+    border-radius: 11px;
+    border: 3px solid var(--card-frame);
+    opacity: 0;
+    transition: opacity .3s ease;
+}
+
+.pp-seat-sheen {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(168deg, rgba(255, 255, 255, .10), transparent 42%, rgba(0, 0, 0, .22));
+    opacity: 0;
+    transition: opacity .3s ease;
+}
+
+.pp-seat-mark {
+    position: absolute;
+    right: 12px;
+    bottom: 11px;
+    height: 15px;
+    opacity: 0;
+    transition: opacity .3s ease;
+}
+
+.pp-seat-in .pp-seat-frame,
+.pp-seat-in .pp-seat-sheen { opacity: 1; }
+
+.pp-seat-in .pp-seat-mark { opacity: .85; }
+
+.pp-seat-dots {
+    position: relative;
+    display: flex;
+    gap: 4px;
+    transition: opacity .3s ease;
+}
+
+.pp-seat-in .pp-seat-dots { opacity: 0; }
+
+.pp-seat-dots span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: ppDots 1.4s ease-in-out infinite;
+}
+
+.pp-seat-dots span:nth-child(2) { animation-delay: .2s; }
+.pp-seat-dots span:nth-child(3) { animation-delay: .4s; }
+
+.pp-seat-face {
+    transform: rotateY(180deg);
+    border: 2px solid var(--pp-tint);
+    background: var(--tile);
+    box-shadow: 0 4px 0 var(--tile-edge);
+}
+
+.pp-seat-value {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--pp-tint);
+}
+
+/* "In" is worth calling out while the round is open; once the cards are face
+   up the value says it. */
+.pp-seat-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--acc);
+    color: var(--acc-ink);
+    font-size: 11px;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: ppPop .35s cubic-bezier(.2, .9, .25, 1) both;
+}
+
+.pp-seat-in:not(.pp-seat-open) .pp-seat-badge { display: flex; }
+
+.pp-seat-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 74px;
 }
 
 /* Lightness and chroma come from the theme, only the hue comes from the
@@ -835,41 +1137,42 @@ a:hover {
     background: oklch(var(--ava-l) var(--ava-c) var(--pp-hue, 150));
 }
 
+.pp-avatar-sm {
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    font-size: 9px;
+}
+
 .pp-avatar-me {
     color: var(--acc-ink);
     background: var(--acc);
 }
 
 .pp-player-name {
-    flex: 1;
-    font-size: 15px;
+    font-size: 12px;
     font-weight: 500;
-    color: var(--text);
+    color: var(--muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.pp-player-state {
-    font-size: 12px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    transition: opacity .25s ease;
-}
+.pp-player-name-me { color: var(--text); }
 
-.pp-player-value {
-    min-width: 34px;
-    text-align: right;
-    font-family: 'Space Grotesk', system-ui, sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--acc);
-    transition: opacity .35s ease;
+/* The seat's state is carried by the card; this keeps it available to anyone
+   the animation does not reach. */
+.pp-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
 }
-
-.pp-high { color: var(--acc2); }
-.pp-neutral { color: var(--muted); }
 
 /* ------------------------------------------------------------------ *
  * Invite / QR
@@ -892,12 +1195,17 @@ a:hover {
     gap: 6px;
 }
 
+/* The blue end of the ramp, so the link is not mistaken for the accent-green
+   call to action a few pixels above it. */
 .pp-invite-link {
     font-family: 'Space Grotesk', system-ui, sans-serif;
     font-size: 19px;
     font-weight: 500;
     word-break: break-all;
+    color: var(--acc2);
 }
+
+.pp-invite-link:hover { color: var(--text); }
 
 .pp-invite-qr {
     display: flex;
@@ -968,8 +1276,16 @@ a:hover {
     .pp-dot,
     .pp-reveal,
     .pp-median,
-    .pp-bar-fill {
+    .pp-chip,
+    .pp-seat-badge,
+    .pp-seat-dots span,
+    .pp-progress-sweep {
         animation: none !important;
+    }
+
+    .pp-seat-flip {
+        transition-duration: .01ms !important;
+        transition-delay: 0ms !important;
     }
 
     .pp-card,

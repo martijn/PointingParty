@@ -29,7 +29,8 @@ public class GameUiTests : BunitContext
         var cut = Render<GameUi>(parameters => parameters.Add(p => p.GameContext, _gameContext));
 
         var me = cut.Find($"""[data-testid="player-row-{PlayerName}"] .pp-player-name""");
-        Assert.Equal($"{PlayerName} (you)", me.GetInnerText());
+        Assert.Equal("you", me.GetInnerText());
+        Assert.Equal(PlayerName, me.GetAttribute("title"));
     }
 
     [Fact]
@@ -87,7 +88,7 @@ public class GameUiTests : BunitContext
         var results = cut.FindAll("""[data-testid="results"] .pp-player-name""");
 
         Assert.Collection(results,
-            e => { Assert.Equal("Player Two (you)", e.GetInnerText()); },
+            e => { Assert.Equal("you", e.GetInnerText()); },
             e => { Assert.Equal(PlayerName, e.GetInnerText()); },
             e => { Assert.Equal("Player Three", e.GetInnerText()); }
         );

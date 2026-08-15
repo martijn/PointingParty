@@ -17,6 +17,23 @@
     </div>
 }
 
+@if (Timeline.Rounds.Count > 0)
+{
+    <div class="pp-timeline" data-testid="timeline">
+        <span class="pp-eyebrow pp-timeline-label">This session</span>
+        <span class="pp-timeline-rule"></span>
+        @foreach (var round in Timeline.Rounds)
+        {
+            <span class="pp-timeline-chip">
+                <span class="pp-timeline-median @(round.Tight ? "pp-verdict-tight" : "pp-verdict-split")">@round.Median</span>
+                @* Parenthesised because Razor reads a bare R@round.Round as an email address. *@
+                <span>R@(round.Round)</span>
+            </span>
+        }
+        <span class="pp-timeline-pace">@Timeline.Pace</span>
+    </div>
+}
+
 <div class="pp-grid">
 
     <section class="pp-panel pp-panel-deck">
@@ -39,15 +56,66 @@
         <div class="pp-progress">
             <div class="pp-progress-track">
                 <div class="pp-progress-fill" style="width: @(VotedPercentage)%;"></div>
+                @* The sweep only runs while the table is mid-vote — a full or empty bar is not waiting on anyone. *@
+                @if (VotesCast > 0 && VotesCast < PlayerCount)
+                {
+                    <span class="pp-progress-sweep"></span>
+                }
             </div>
             <span class="pp-progress-label">@VotesCast / @PlayerCount voted</span>
         </div>
     </section>
 
     <section class="pp-panel pp-panel-table">
+        <div class="pp-panel-head">
+            <h2>Around the table</h2>
+            <span class="pp-hint">@TableStatus</span>
+        </div>
+
+        <div class="pp-seats" data-testid="results">
+            @foreach (var (seat, index) in Players().Select((seat, index) => (seat, index)))
+            {
+                var (player, vote) = seat;
+                var isMe = player == GameContext.PlayerName;
+                var hasVoted = vote.Status != VoteStatus.Pending;
+                var revealed = Game.State.ShowVotes && hasVoted;
+
+                <div class="pp-seat" data-testid="player-row-@player">
+                    @* The card is the whole state display: dashed and empty while thinking, backed
+                       and ticked once in, flipped over at the reveal. *@
+                    <div class="pp-seat-card @(hasVoted ? "pp-seat-in" : "") @(revealed ? "pp-seat-open" : "")"
+                         style="--pp-tint: @VoteVisuals.Tint(vote); --pp-flip-delay: @(revealed ? index * 110 : 0)ms;">
+                        <div class="pp-seat-flip">
+                            <div class="pp-seat-back">
+                                <span class="pp-seat-frame"></span>
+                                <span class="pp-seat-sheen"></span>
+                                <span class="pp-seat-dots"><span></span><span></span><span></span></span>
+                                <img src="/mark.svg" alt="" class="pp-seat-mark"/>
+                            </div>
+                            <div class="pp-seat-face">
+                                @* Only rendered once the round is open: an unrevealed vote must not
+                                   sit in the DOM where a curious player could read it. *@
+                                <span class="pp-seat-value" data-testid="vote-for-@player">@(revealed ? vote.ToString() : "")</span>
+                            </div>
+                        </div>
+                        <span class="pp-seat-badge">✓</span>
+                    </div>
+                    <div class="pp-seat-label">
+                        <span class="pp-avatar pp-avatar-sm @(isMe ? "pp-avatar-me" : "")"
+                              style="--pp-hue: @PlayerAvatar.Hue(player);">@PlayerAvatar.Initials(player)</span>
+                        <span class="pp-player-name @(isMe ? "pp-player-name-me" : "")" title="@player">@(isMe ? "you" : player)</span>
+                    </div>
+                    @* The card carries the state visually; this keeps it available to screen readers. *@
+                    <span class="pp-sr" data-testid="state-for-@player">@(hasVoted ? "ready" : "thinking…")</span>
+                </div>
+            }
+        </div>
+
         @if (Game.State.ShowVotes)
         {
             var summary = Game.State.Summarize();
+            var stacks = Stacks();
+            var abstained = Abstained();
             <div class="pp-reveal">
                 <div class="pp-verdict-row">
                     <div>
@@ -56,47 +124,38 @@
                     </div>
                     <div class="pp-median">
                         <span class="pp-median-label">Median</span>
-                        <span class="pp-median-value" data-testid="median">@(summary.Median?.ToString() ?? "–")</span>
+                        <span class="pp-median-value" data-testid="median">@(summary.Median?.ToString(CultureInfo.InvariantCulture) ?? "–")</span>
                     </div>
                 </div>
-                <div class="pp-note">@summary.Note</div>
-                <div class="pp-bars">
-                    @foreach (var (bar, index) in Distribution().Select((bar, index) => (bar, index)))
+
+                @* The distribution is drawn on the deck's own scale, so an empty column between two
+                   busy ones reads as a gap in the table's thinking rather than as missing data. *@
+                <div class="pp-scale" style="--pp-stack: @(Math.Max(1, stacks.Max(s => s.Chips.Count)) * 30)px;">
+                    @foreach (var stack in stacks)
                     {
-                        <div class="pp-bar-row">
-                            <span class="pp-bar-label">@bar.Vote</span>
-                            <div class="pp-bar-track">
-                                <div class="pp-bar-fill @BarClass(bar.Vote)"
-                                     style="width: @(bar.Percentage)%; animation-delay: @(index * 90)ms;"></div>
+                        <div class="pp-scale-col">
+                            <div class="pp-scale-stack">
+                                @foreach (var (chip, position) in stack.Chips.Select((chip, position) => (chip, position)))
+                                {
+                                    <span class="pp-chip @(chip.IsMe ? "pp-chip-me" : "")"
+                                          style="--pp-hue: @PlayerAvatar.Hue(chip.Player); animation-delay: @(300 + position * 90)ms;">
+                                        <span class="pp-chip-tip">@(chip.IsMe ? $"{chip.Player} (you)" : chip.Player)</span>
+                                        @PlayerAvatar.Initials(chip.Player)
+                                    </span>
+                                }
                             </div>
-                            <span class="pp-bar-count">@bar.Count @(bar.Count == 1 ? "vote" : "votes")</span>
+                            <span class="pp-scale-tick" style="background: @(stack.Chips.Count > 0 ? VoteVisuals.Tint(stack.Score) : "var(--border2)");"></span>
+                            <span class="pp-scale-label @(stack.Chips.Count > 0 ? "" : "pp-scale-label-empty")">@stack.Score</span>
                         </div>
                     }
                 </div>
-            </div>
-        }
 
-        <div>
-            <div class="pp-panel-head pp-roster-head">
-                <h2>Around the table</h2>
-                <span class="pp-hint">@TableStatus</span>
-            </div>
-            <div class="pp-roster" data-testid="results">
-                @foreach (var (player, vote) in Players())
+                @if (abstained.Count > 0)
                 {
-                    var isMe = player == GameContext.PlayerName;
-                    var hasVoted = vote.Status != VoteStatus.Pending;
-                    var revealed = Game.State.ShowVotes && hasVoted;
-
-                    <div class="pp-player @(hasVoted ? "pp-player-voted" : "")" data-testid="player-row-@player">
-                        <span class="pp-avatar @(isMe ? "pp-avatar-me" : "")" style="--pp-hue: @PlayerAvatar.Hue(player);">@PlayerAvatar.Initials(player)</span>
-                        <span class="pp-player-name">@(isMe ? $"{player} (you)" : player)</span>
-                        <span class="pp-player-state" style="opacity: @(revealed ? 0 : 1);" data-testid="state-for-@player">@(revealed ? "" : hasVoted ? "ready" : "thinking…")</span>
-                        <span class="pp-player-value @VoteClass(vote)" style="opacity: @(revealed ? 1 : 0);" data-testid="vote-for-@player">@(revealed ? vote.ToString() : "")</span>
-                    </div>
+                    <div class="pp-note">@AbstainNote(abstained)</div>
                 }
             </div>
-        </div>
+        }
 
         <div class="pp-actions">
             @if (Game.State.ShowVotes)
@@ -122,6 +181,13 @@
 
     [Parameter]
     public IGameContext GameContext { get; set; } = default!;
+
+    /// <summary>
+    /// The session strip above the panels. Owned by the page, because the header's clock reads from
+    /// the same timeline.
+    /// </summary>
+    [Parameter]
+    public RoundTimeline Timeline { get; set; } = new();
 
     /// <summary>
     /// Raised after a local action changes the game. Remote events already re-render the page
@@ -162,22 +228,44 @@
             .ThenBy(x => x.Key);
     }
 
-    private record Bar(Vote Vote, int Count, int Percentage);
+    private record Chip(string Player, bool IsMe);
 
-    private List<Bar> Distribution()
+    private record Stack(double Score, List<Chip> Chips);
+
+    /// <summary>
+    /// One column per deck value, each holding the players who chose it. Empty columns are kept:
+    /// the gaps are half the point of the picture.
+    /// </summary>
+    private List<Stack> Stacks()
     {
-        var groups = Game.State.PlayerVotes.Values
-            .Where(v => v.Status != VoteStatus.Pending)
-            .GroupBy(v => v)
-            .OrderBy(g => g.Key)
+        var voters = Players()
+            .Where(x => x.Value.Status == VoteStatus.Scored)
             .ToList();
 
-        if (groups.Count == 0) return [];
-
-        var max = groups.Max(g => g.Count());
-        return groups
-            .Select(g => new Bar(g.Key, g.Count(), (int)Math.Round(100.0 * g.Count() / max)))
+        return VoteVisuals.Scale
+            .Select(score => new Stack(score, voters
+                .Where(x => x.Value.Score.Equals(score))
+                .Select(x => new Chip(x.Key, x.Key == GameContext.PlayerName))
+                .ToList()))
             .ToList();
+    }
+
+    /// <summary>
+    /// Question marks and coffee cups carry no size, so they are left off the scale — but leaving
+    /// them out silently would make the picture look like it lost people.
+    /// </summary>
+    private List<string> Abstained()
+    {
+        return Players()
+            .Where(x => x.Value.Status is VoteStatus.Question or VoteStatus.Coffee)
+            .Select(x => x.Key == GameContext.PlayerName ? "you" : x.Key)
+            .ToList();
+    }
+
+    private static string AbstainNote(List<string> names)
+    {
+        var verb = names is ["you"] || names.Count > 1 ? "are" : "is";
+        return $"{string.Join(", ", names)} {verb} sitting this one out.";
     }
 
     private static string VerdictLabel(Verdict verdict) => verdict switch
@@ -190,20 +278,6 @@
 
     private static string VerdictClass(Verdict verdict) =>
         verdict is Verdict.Unanimous or Verdict.Tight ? "pp-verdict-tight" : "pp-verdict-split";
-
-    private static string BarClass(Vote vote) => vote.Status switch
-    {
-        VoteStatus.Scored when vote.Score > 8 => "pp-bar-high",
-        VoteStatus.Scored => "",
-        _ => "pp-bar-neutral"
-    };
-
-    private static string VoteClass(Vote vote) => vote.Status switch
-    {
-        VoteStatus.Scored when vote.Score > 8 => "pp-high",
-        VoteStatus.Scored => "",
-        _ => "pp-neutral"
-    };
 
     protected override void OnInitialized()
     {

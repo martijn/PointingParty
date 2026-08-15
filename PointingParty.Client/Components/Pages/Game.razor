@@ -8,29 +8,37 @@
 
 <PageTitle>@GameId Pointing Party</PageTitle>
 
+@* Folding the aggregate into the timeline on render rather than on an event: a round is only
+   finished once the reset that follows it lands, and by then the votes it needs are gone. The
+   call is idempotent — it acts on the reveal and the round change and ignores everything else. *@
+@{ if (GameContext.Game is not null) _timeline.Observe(GameContext.Game); }
+
 <header class="pp-header">
     <div class="pp-header-group">
         <Logo/>
-        <span class="pp-pill">
+        <span class="pp-pill" data-testid="game-pill">
             <span class="pp-dot @ConnectionDotClass"></span>
+            <span class="pp-pill-name">@GameId</span>
+            <span class="pp-pill-dot">·</span>
             <span>@ConnectionLabel</span>
         </span>
     </div>
     <div class="pp-header-group">
-        <span class="pp-pill" data-testid="game-pill">
-            <span class="pp-pill-name">@GameId</span>
-            @if (GameContext.Game is not null)
-            {
-                <span data-testid="round">round @GameContext.Game.Round</span>
-            }
-        </span>
+        @if (GameContext.Game is not null)
+        {
+            <span class="pp-pill">
+                <span class="pp-pill-round" data-testid="round">Round @GameContext.Game.Round</span>
+                <span class="pp-pill-rule"></span>
+                <span>@_timeline.Clock</span>
+            </span>
+        }
         <ThemeToggle/>
     </div>
 </header>
 
 @if (GameContext.Game is not null)
 {
-    <GameUi GameContext="@GameContext" GameChanged="StateHasChanged"/>
+    <GameUi GameContext="@GameContext" Timeline="@_timeline" GameChanged="StateHasChanged"/>
 }
 else
 {
@@ -83,6 +91,9 @@ else
 
     private string GameUrl => $"https://pointingparty.com/Game/{Uri.EscapeDataString(GameId)}";
 
+    private readonly RoundTimeline _timeline = new();
+    private PeriodicTimer? _clock;
+
     private string ConnectionLabel => GameContext.Status switch
     {
         ConnectionStatus.Connected => "live",
@@ -118,14 +129,32 @@ else
 
     protected override void OnAfterRender(bool firstRender)
     {
+        if (firstRender)
+            _ = RunClock();
+
         // If game was started from the front page, remove PlayerName query string so the browser location
         // bar has a share-friendly URL
         if (GameContext.Game is not null && !string.IsNullOrWhiteSpace(PlayerName))
             NavManager.NavigateTo($"/Game/{GameId}", replace: true);
     }
 
+    /// <summary>
+    /// Drives the header clock. It only asks for a render while a round is actually running — once
+    /// the votes are on the table the reading is frozen and there is nothing to repaint.
+    /// </summary>
+    private async Task RunClock()
+    {
+        _clock = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        while (await _clock.WaitForNextTickAsync())
+        {
+            if (GameContext.Game is { State.ShowVotes: false })
+                await InvokeAsync(StateHasChanged);
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
+        _clock?.Dispose();
         await GameContext.DisposeAsync();
     }
 

@@ -18,9 +18,8 @@ public enum Verdict
 /// and coffee) are excluded throughout: they carry no size information.
 /// </summary>
 /// <param name="Verdict">How far apart the scored votes are.</param>
-/// <param name="Note">One line of plain-language guidance for the table.</param>
 /// <param name="Median">Median of the scored votes, or null when nobody put a number down.</param>
-public record RoundSummary(Verdict Verdict, string Note, double? Median);
+public record RoundSummary(Verdict Verdict, double? Median);
 
 public static class GameStateExtensions
 {
@@ -47,7 +46,7 @@ public static class GameStateExtensions
         var median = gameState.MedianVote();
 
         if (scores.Count == 0)
-            return new RoundSummary(Verdict.Split, "Nobody put a number down — no estimate to take from this round.", null);
+            return new RoundSummary(Verdict.Split, null);
 
         var low = scores[0];
         var high = scores[^1];
@@ -63,11 +62,7 @@ public static class GameStateExtensions
             _ => Verdict.Split
         };
 
-        var note = distinct == 1
-            ? $"Everyone landed on {low}. Ship the estimate and move on."
-            : $"Spread {low}–{high} across {scores.Count} estimates. Let the outliers make their case.";
-
-        return new RoundSummary(verdict, note, median);
+        return new RoundSummary(verdict, median);
     }
 
     /// <summary>
