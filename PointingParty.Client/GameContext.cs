@@ -115,7 +115,7 @@ public sealed class GameContext(ILogger<GameContext> logger, NavigationManager n
         {
             // On rejoin, clear user vote and game status then publish join
             // event so other players sync up
-            Game.Handle(new GameReset(Game.State.GameId));
+            Game.Resync();
             Game.PlayerJoined();
             PublishEvents();
         }

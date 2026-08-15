@@ -32,6 +32,12 @@ public class GameAggregate
     public GameState State { get; private set; }
     public Vote CurrentVote { get; private set; }
 
+    /// <summary>
+    /// Rounds this client has seen, counting from the one it joined. It is derived from the local
+    /// event stream rather than shared state, so a player who joins late starts counting at one.
+    /// </summary>
+    public int Round { get; private set; } = 1;
+
     public void Handle(IGameEvent eventMessage)
     {
         switch (eventMessage)
@@ -60,6 +66,21 @@ public class GameAggregate
     }
 
     private void Apply(GameReset e)
+    {
+        ClearVotes();
+        Round++;
+    }
+
+    /// <summary>
+    /// Clears local state after a dropped connection. Unlike a reset this does not count a new
+    /// round: the table did not move on to the next story, this client just lost its place.
+    /// </summary>
+    public void Resync()
+    {
+        ClearVotes();
+    }
+
+    private void ClearVotes()
     {
         CurrentVote = new Vote();
 

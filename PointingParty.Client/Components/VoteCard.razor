@@ -1,0 +1,86 @@
+@using PointingParty.Domain
+
+<button type="button" class="@CssClass" aria-label="@AriaLabel" @onclick="@(_ => OnClick.InvokeAsync())">
+    <span class="pp-card-ring"></span>
+    @if (IsScored)
+    {
+        <img src="/mark.svg" alt="" class="pp-card-mark"
+             style="height: @(MarkHeight)px; transform: rotate(@(MarkRotation)deg);"/>
+    }
+    @if (Value.Status == VoteStatus.Coffee)
+    {
+        <span class="pp-cup"><i></i><b></b></span>
+    }
+    else
+    {
+        <span class="pp-card-value @(Value.Status == VoteStatus.Question ? "pp-card-value-sm" : "")">@Label</span>
+    }
+    <span class="pp-card-caption">@Caption</span>
+</button>
+
+@code {
+
+    [Parameter]
+    public Vote Value { get; set; }
+
+    [Parameter]
+    public bool Selected { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    private bool IsScored => Value.Status == VoteStatus.Scored;
+
+    private string Label => Value.Status switch
+    {
+        VoteStatus.Scored => Value.Score.ToString(),
+        VoteStatus.Question => "?",
+        _ => ""
+    };
+
+    private string Caption => Value.Status switch
+    {
+        VoteStatus.Question => "not sure",
+        VoteStatus.Coffee => "break",
+        _ => ""
+    };
+
+    // The numerals speak for themselves; only the two utility cards need spelling out.
+    private string? AriaLabel => Value.Status switch
+    {
+        VoteStatus.Question => "Vote not sure",
+        VoteStatus.Coffee => "Vote break",
+        _ => null
+    };
+
+    private string CssClass
+    {
+        get
+        {
+            var classes = new List<string> { "pp-card" };
+            if (!IsScored) classes.Add("pp-card-util");
+            else if (Value.Score > 8) classes.Add("pp-card-high");
+            if (Selected) classes.Add("pp-card-selected");
+            return string.Join(" ", classes);
+        }
+    }
+
+    // The cactus grows with the estimate: one asset, log-scaled, so 1 is a sprout at 24px
+    // and 34 fills the tile at 102px.
+    private int MarkHeight => (int)Math.Round(24 + 78 * Math.Log(Value.Score) / Math.Log(34));
+
+    // A fixed per-value tilt — deterministic, so a card never twitches between renders.
+    private int MarkRotation => Value.Score switch
+    {
+        1 => -11,
+        2 => 8,
+        3 => -7,
+        5 => 10,
+        8 => -9,
+        13 => 7,
+        21 => -8,
+        34 => 9,
+        _ => 0
+    };
+
+}

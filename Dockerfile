@@ -1,7 +1,6 @@
 ARG DOTNET_VERSION=10.0
 
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
-ARG SYNCFUSION_LICENSE_KEY
 RUN apt-get update && apt-get install -y python3 curl && rm -rf /var/lib/apt/lists/*
 RUN dotnet workload install wasm-tools
 WORKDIR /src
@@ -33,17 +32,13 @@ COPY . ./
 RUN set -ex; \
     ./tailwindcss -i PointingParty/wwwroot/app.css -o PointingParty/wwwroot/app.min.css --minify && rm PointingParty/wwwroot/app.css
 
-# build - pass SyncfusionLicenseKey MSBuild property to embed metadata in both projects
-RUN dotnet publish -c Release -o /app PointingParty \
-    /p:SyncfusionLicenseKey="$SYNCFUSION_LICENSE_KEY"
+# build
+RUN dotnet publish -c Release -o /app PointingParty
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}
-ARG SYNCFUSION_LICENSE_KEY
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
-# Optional runtime fallback for server
-ENV SYNCFUSION_LICENSE_KEY=${SYNCFUSION_LICENSE_KEY}
 EXPOSE 8080
 WORKDIR /app
 COPY --from=build /app .

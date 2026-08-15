@@ -1,48 +1,38 @@
-﻿@page "/"
+@page "/"
 @using System.ComponentModel.DataAnnotations
 @using PointingParty.Client.Components
 @inject NavigationManager NavManager
 
 <PageTitle>Pointing Party</PageTitle>
 
-<div class="max-w-5xl mx-auto px-4 xl:px-0 pt-24 lg:pt-32 pb-24">
-    <h1 class="font-semibold dark:text-white text-5xl md:text-6xl">
+<div class="pp-hero">
+    <h1>
         Hassle-free Story Estimation<br/>for Agile Teams
     </h1>
-    <div class="max-w-4xl">
-        <p class="mt-5 text-neutral-400 text-lg">
-            Start a game and share the link. No registration required!
-        </p>
-    </div>
+    <p>
+        Start a game and share the link. No registration required!
+    </p>
 </div>
 
-<div class="mt-4 mb-2">
+<section class="pp-panel pp-join">
     <EditForm Model="Model" OnValidSubmit="StartGame" FormName="NewGame">
         <DataAnnotationsValidator></DataAnnotationsValidator>
-        <div class="my-2">
-            <label>
-                <span class="text-xs font-medium text-gray-500 uppercase">
-                    Game name:
-                </span>
-                <InputText @bind-Value="Model.GameId" type="text" placeholder="My Pointing Party" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-gray-700 dark:text-gray-400"/>
-            </label>
-        </div>
-        <div class="my-2">
-            <label>
-                <span class="text-xs font-medium text-gray-500 uppercase">
-                    Your name:
-                </span>
-                <InputText @bind-Value="Model.PlayerName" type="text" placeholder="Player Name" class="py-3 px-4 block w-full border-gray-200 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-gray-700 dark:text-gray-400"/>
-            </label>
-        </div>
-        <div class="my-2 text-center md:text-left">
+        <label class="pp-field">
+            <span class="pp-eyebrow">Game name</span>
+            <InputText @bind-Value="Model.GameId" type="text" placeholder="My Pointing Party" class="pp-input"/>
+        </label>
+        <label class="pp-field">
+            <span class="pp-eyebrow">Your name</span>
+            <InputText @bind-Value="Model.PlayerName" type="text" placeholder="Player Name" class="pp-input"/>
+        </label>
+        <div class="pp-actions">
             <FatButton type="submit">Start game</FatButton>
         </div>
     </EditForm>
-</div>
+</section>
 
-<p class="mt-4 mb-2">
-    Alternatively, join the one of the demo games:
+<p class="pp-note">
+    Alternatively, join one of the demo games:
     <a href="/Game/Demo%20One">'Demo One'</a> or
     <a href="/Game/Demo%20Two">'Demo Two'</a>.
 </p>

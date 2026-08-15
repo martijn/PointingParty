@@ -17,7 +17,6 @@
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
         <PackageReference Include="QRCoder" Version="1.7.0" />
-        <PackageReference Include="Syncfusion.Blazor.Charts" Version="31.2.10" />
     </ItemGroup>
 
     <ItemGroup>
@@ -28,17 +27,8 @@
       <AdditionalFiles Include="Components\FatButton.razor" />
       <AdditionalFiles Include="Components\GameUi.razor" />
       <AdditionalFiles Include="Components\Pages\Game.razor" />
-      <AdditionalFiles Include="Components\ScoreGraph.razor" />
-      <AdditionalFiles Include="Components\VoteButton.razor" />
+      <AdditionalFiles Include="Components\VoteCard.razor" />
       <AdditionalFiles Include="Components\_Imports.razor" />
-    </ItemGroup>
-
-    <!-- Embed license key into assembly metadata when provided at build-time -->
-    <ItemGroup Condition="'$(SyncfusionLicenseKey)' != ''">
-      <AssemblyAttribute Include="System.Reflection.AssemblyMetadata">
-        <_Parameter1>SyncfusionLicenseKey</_Parameter1>
-        <_Parameter2>$(SyncfusionLicenseKey)</_Parameter2>
-      </AssemblyAttribute>
     </ItemGroup>
 
 </Project>
