@@ -81,6 +81,40 @@ public class GameStateExtensionsTests
         Assert.Null(state.Summarize().Median);
     }
 
+    [Fact]
+    public void Is_Inconclusive_Without_Scored_Votes()
+    {
+        var state = new GameState(
+            string.Empty,
+            new Dictionary<string, Vote>
+            {
+                { "a", VoteStatus.Coffee },
+                { "b", VoteStatus.Question }
+            }.ToImmutableDictionary(),
+            true);
+
+        Assert.Equal(Verdict.Inconclusive, state.Summarize().Verdict);
+    }
+
+    [Theory]
+    [InlineData(VoteStatus.Pending)]
+    [InlineData(VoteStatus.Coffee)]
+    [InlineData(VoteStatus.Question)]
+    public void Is_Inconclusive_When_Only_One_Player_Put_A_Number_Down(VoteStatus other)
+    {
+        var state = new GameState(
+            string.Empty,
+            new Dictionary<string, Vote>
+            {
+                { "a", 2 },
+                { "b", other }
+            }.ToImmutableDictionary(),
+            true);
+
+        Assert.Equal(Verdict.Inconclusive, state.Summarize().Verdict);
+        Assert.Equal(2, state.Summarize().Median);
+    }
+
     [Theory]
     [InlineData(Verdict.Unanimous, new double[] { 5, 5, 5 })]
     [InlineData(Verdict.Tight, new double[] { 3, 5 })] // 5/3 = 1.67

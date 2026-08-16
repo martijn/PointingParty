@@ -8,9 +8,10 @@ namespace PointingParty.Client;
 /// </summary>
 /// <param name="Round">Round number as this client counts them.</param>
 /// <param name="Median">Median of the scored votes.</param>
-/// <param name="Tight">Whether the table landed close together — drives the chip's colour.</param>
+/// <param name="Verdict">How the table landed — drives the chip's colour, and whether it shows a
+/// median at all: an inconclusive round has a median but nothing to conclude from it.</param>
 /// <param name="Elapsed">How long the round took, measured to the reveal.</param>
-public readonly record struct TimedRound(int Round, double Median, bool Tight, TimeSpan Elapsed);
+public readonly record struct TimedRound(int Round, double Median, Verdict Verdict, TimeSpan Elapsed);
 
 /// <summary>
 /// The session's shape so far: how long the current round has been running, and what the finished
@@ -63,7 +64,7 @@ public sealed class RoundTimeline(TimeProvider? time = null)
         if (game.Round != _round)
         {
             if (_revealed is { Median: { } median })
-                _rounds.Add(new TimedRound(_round, median, IsTight(_revealed.Verdict), _frozen ?? Elapsed));
+                _rounds.Add(new TimedRound(_round, median, _revealed.Verdict, _frozen ?? Elapsed));
 
             _revealed = null;
             _round = game.Round;
@@ -76,8 +77,6 @@ public sealed class RoundTimeline(TimeProvider? time = null)
         _frozen ??= _time.GetUtcNow() - _started;
         _revealed = game.State.Summarize();
     }
-
-    private static bool IsTight(Verdict verdict) => verdict is Verdict.Unanimous or Verdict.Tight;
 
     private static string Format(TimeSpan span) =>
         string.Create(CultureInfo.InvariantCulture, $"{(int)span.TotalMinutes}:{span.Seconds:D2}");

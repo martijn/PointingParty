@@ -7,6 +7,8 @@ namespace PointingParty.Client;
 /// </summary>
 public enum Verdict
 {
+    /// <summary>Fewer than two people put a number down — there is nothing to agree or disagree about.</summary>
+    Inconclusive,
     Unanimous,
     Tight,
     CloseEnough,
@@ -45,8 +47,10 @@ public static class GameStateExtensions
         var scores = gameState.ScoredVotes();
         var median = gameState.MedianVote();
 
-        if (scores.Count == 0)
-            return new RoundSummary(Verdict.Split, null);
+        // One number on the table agrees with nothing but itself, and no numbers at all agree with
+        // even less — neither is a result the table can read anything into.
+        if (scores.Count < 2)
+            return new RoundSummary(Verdict.Inconclusive, median);
 
         var low = scores[0];
         var high = scores[^1];

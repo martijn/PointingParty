@@ -835,6 +835,7 @@ a:hover {
 
 .pp-verdict-tight { color: var(--acc); }
 .pp-verdict-split { color: var(--acc2); }
+.pp-verdict-quiet { color: var(--muted); }
 
 .pp-median {
     display: inline-flex;

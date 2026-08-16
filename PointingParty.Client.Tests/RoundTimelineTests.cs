@@ -86,10 +86,25 @@ public class RoundTimelineTests
         var round = Assert.Single(_timeline.Rounds);
         Assert.Equal(1, round.Round);
         Assert.Equal(6.5, round.Median);
-        Assert.True(round.Tight);
+        Assert.Equal(Verdict.Tight, round.Verdict);
         Assert.Equal(TimeSpan.FromSeconds(45), round.Elapsed);
         Assert.Equal("1 story · 0:45 avg", _timeline.Pace);
         Assert.Equal("0:00", _timeline.Clock);
+    }
+
+    [Fact]
+    public void Records_A_Round_Only_One_Player_Scored_As_Inconclusive()
+    {
+        _timeline.Observe(_game);
+        _game.Handle(new VoteCast(GameId, "Player One", 5));
+        _game.Handle(new VoteCast(GameId, "Player Two", VoteStatus.Question));
+        _game.Handle(new VotesShown(GameId));
+        _timeline.Observe(_game);
+        _game.Handle(new GameReset(GameId));
+        _timeline.Observe(_game);
+
+        var round = Assert.Single(_timeline.Rounds);
+        Assert.Equal(Verdict.Inconclusive, round.Verdict);
     }
 
     [Fact]

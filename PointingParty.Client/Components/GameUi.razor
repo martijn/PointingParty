@@ -25,7 +25,7 @@
         @foreach (var round in Timeline.Rounds)
         {
             <span class="pp-timeline-chip">
-                <span class="pp-timeline-median @(round.Tight ? "pp-verdict-tight" : "pp-verdict-split")">@round.Median</span>
+                <span class="pp-timeline-median @VerdictClass(round.Verdict)" title="@VerdictLabel(round.Verdict)">@TimelineValue(round)</span>
                 @* Parenthesised because Razor reads a bare R@round.Round as an email address. *@
                 <span>R@(round.Round)</span>
             </span>
@@ -270,14 +270,28 @@
 
     private static string VerdictLabel(Verdict verdict) => verdict switch
     {
+        Verdict.Inconclusive => "Inconclusive",
         Verdict.Unanimous => "Unanimous",
         Verdict.Tight => "Tight",
         Verdict.CloseEnough => "Close enough",
         _ => "Split"
     };
 
-    private static string VerdictClass(Verdict verdict) =>
-        verdict is Verdict.Unanimous or Verdict.Tight ? "pp-verdict-tight" : "pp-verdict-split";
+    /// <summary>
+    /// A round that never settled has a median, but printing it would claim the table agreed on a
+    /// number it never agreed on — so the chip carries a question mark instead.
+    /// </summary>
+    private static string TimelineValue(TimedRound round) =>
+        round.Verdict == Verdict.Inconclusive
+            ? "?"
+            : round.Median.ToString(CultureInfo.InvariantCulture);
+
+    private static string VerdictClass(Verdict verdict) => verdict switch
+    {
+        Verdict.Inconclusive => "pp-verdict-quiet",
+        Verdict.Unanimous or Verdict.Tight => "pp-verdict-tight",
+        _ => "pp-verdict-split"
+    };
 
     protected override void OnInitialized()
     {
@@ -306,13 +320,10 @@
 
     private async Task TriggerConfettiIfUnanimous()
     {
-        var nonPendingVotes = Game.State.PlayerVotes.Values
-            .Where(v => v.Status != VoteStatus.Pending)
-            .ToList();
-
-        if (nonPendingVotes.Count > 1 && nonPendingVotes.All(v => v.Equals(nonPendingVotes[0])))
+        if (Game.State.Summarize().Verdict == Verdict.Unanimous)
         {
-            var particleCount = (int)(30 + 170 * (nonPendingVotes.Count / (double)PlayerCount));
+            var agreed = Game.State.PlayerVotes.Values.Count(v => v.Status == VoteStatus.Scored);
+            var particleCount = (int)(30 + 170 * (agreed / (double)PlayerCount));
             var shape = ConfettiShapes[Random.Next(ConfettiShapes.Length)];
             await JS.InvokeVoidAsync("confetti", new
             {
