@@ -1,6 +1,7 @@
 obj/
 bin/
 /.idea
+/.claude
 /PointingParty.sln.DotSettings.user
 
 # Ignore local WASM appsettings containing license keys
