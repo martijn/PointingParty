@@ -11,7 +11,7 @@ test("can start a game from home", async ({ page }) => {
   await page.getByRole("button", { name: "Start game" }).click();
 
   await expect(page).toHaveURL(`/Game/${game}`);
-  await expect(page.getByTestId("player-row-Player One")).toContainText("Player One (you)");
+  await expect(page.getByTestId("player-row-Player One")).toContainText("you");
 });
 
 test("can start a game from a game URL", async ({ page }) => {
@@ -25,7 +25,7 @@ test("can start a game from a game URL", async ({ page }) => {
   await page.getByPlaceholder("Player Name").fill("Player Two");
   await page.getByRole("button", { name: "Enter game" }).click();
 
-  await expect(page.getByTestId("player-row-Player Two")).toContainText("Player Two (you)");
+  await expect(page.getByTestId("player-row-Player Two")).toContainText("you");
 });
 
 test("play with two players", async ({ context }) => {
@@ -76,11 +76,11 @@ test("counts rounds", async ({ page }) => {
 
   await page.goto(`/Game/${game}?PlayerName=Player%20One`);
 
-  await expect(page.getByTestId("round")).toHaveText("round 1");
+  await expect(page.getByTestId("round")).toHaveText("Round 1");
 
   await page.getByRole("button", { name: "New round" }).click();
 
-  await expect(page.getByTestId("round")).toHaveText("round 2");
+  await expect(page.getByTestId("round")).toHaveText("Round 2");
 });
 
 test("shows the verdict and the median", async ({ page, context }) => {

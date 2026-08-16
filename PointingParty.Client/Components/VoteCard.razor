@@ -1,11 +1,20 @@
 @using PointingParty.Domain
 
-<button type="button" class="@CssClass" aria-label="@AriaLabel" @onclick="@(_ => OnClick.InvokeAsync())">
+<button type="button" class="@CssClass" style="--pp-tint: @Tint;" aria-label="@AriaLabel"
+        @onclick="@(_ => OnClick.InvokeAsync())">
+    <span class="pp-card-strip"></span>
     <span class="pp-card-ring"></span>
     @if (IsScored)
     {
-        <img src="/mark.svg" alt="" class="pp-card-mark"
-             style="height: @(MarkHeight)px; transform: rotate(@(MarkRotation)deg);"/>
+        @* The cactus and its spines share one box so they scale and tilt as a single plant. *@
+        <span class="pp-card-plant" style="height: @(MarkHeight)px; transform: rotate(@(MarkRotation)deg);">
+            <img src="/mark.svg" alt=""/>
+            @foreach (var spine in Spines)
+            {
+                <span class="pp-spine"
+                      style="left: @(spine.X)%; top: @(spine.Y)%; width: @(spine.Length)px; height: @(spine.Thickness.ToString(CultureInfo.InvariantCulture))px; transform: translateY(-50%) rotate(@(spine.Rotation)deg) scaleX(@spine.Flip);"></span>
+            }
+        </span>
     }
     @if (Value.Status == VoteStatus.Coffee)
     {
@@ -33,7 +42,7 @@
 
     private string Label => Value.Status switch
     {
-        VoteStatus.Scored => Value.Score.ToString(),
+        VoteStatus.Scored => Value.Score.ToString(CultureInfo.InvariantCulture),
         VoteStatus.Question => "?",
         _ => ""
     };
@@ -53,34 +62,14 @@
         _ => null
     };
 
-    private string CssClass
-    {
-        get
-        {
-            var classes = new List<string> { "pp-card" };
-            if (!IsScored) classes.Add("pp-card-util");
-            else if (Value.Score > 8) classes.Add("pp-card-high");
-            if (Selected) classes.Add("pp-card-selected");
-            return string.Join(" ", classes);
-        }
-    }
+    private string CssClass => Selected ? "pp-card pp-card-selected" : "pp-card";
 
-    // The cactus grows with the estimate: one asset, log-scaled, so 1 is a sprout at 24px
-    // and 34 fills the tile at 102px.
-    private int MarkHeight => (int)Math.Round(24 + 78 * Math.Log(Value.Score) / Math.Log(34));
+    private string Tint => VoteVisuals.Tint(Value);
 
-    // A fixed per-value tilt — deterministic, so a card never twitches between renders.
-    private int MarkRotation => Value.Score switch
-    {
-        1 => -11,
-        2 => 8,
-        3 => -7,
-        5 => 10,
-        8 => -9,
-        13 => 7,
-        21 => -8,
-        34 => 9,
-        _ => 0
-    };
+    private int MarkHeight => VoteVisuals.MarkHeight(Value.Score);
+
+    private int MarkRotation => VoteVisuals.MarkRotation(Value.Score);
+
+    private IReadOnlyList<Spine> Spines => VoteVisuals.Spines(Value.Score);
 
 }

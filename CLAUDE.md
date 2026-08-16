@@ -92,6 +92,14 @@ Tailwind is still in the pipeline but only contributes its preflight reset - no 
 
 Avatar colours are a pure function of the player name (`PlayerAvatar.cs`): FNV-1a hash spread by the golden angle gives the hue, while lightness and chroma come from theme tokens. No server state, and the same player is the same colour on every client.
 
+### Vote visuals
+
+`VoteVisuals.cs` derives everything a value looks like from the value itself: its point on the deck's continuous green-to-blue hue ramp (`oklch()`, with lightness and chroma from theme tokens), the log-scaled height of its cactus, and how many spines that cactus carries. The tint is reused by the card, the flipped table card and the distribution ticks, so one value reads the same everywhere.
+
+### Round timeline
+
+`RoundTimeline.cs` is client-local, unpersisted session history: the clock on the current round (frozen at the reveal) and a chip per finished round. `Game.razor` owns the instance and drives a `PeriodicTimer` for the header clock; `GameUi` renders the strip. A round is only closed by the reset that follows it, and that reset has already wiped the votes — so `Observe()` is called on every render and folds in both transitions itself rather than hooking an event.
+
 ## Key Files and Components
 
 - **PointingParty/Program.cs** - Server startup, configures SignalR with Azure SignalR Service support
