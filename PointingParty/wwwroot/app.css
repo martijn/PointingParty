@@ -39,7 +39,6 @@
     --back2: rgba(255, 255, 255, 0.02);
     --card-frame: rgba(233, 242, 236, 0.9);
     --qr-bg: #04100C;
-    --qr-frame: rgba(79, 227, 168, 0.35);
 }
 
 [data-theme="light"] {
@@ -73,7 +72,6 @@
     --back2: #16302A;
     --card-frame: rgba(255, 255, 255, 0.92);
     --qr-bg: #FFFFFF;
-    --qr-frame: rgba(21, 155, 108, 0.30);
 }
 
 @keyframes ppDrift {
@@ -1231,7 +1229,7 @@ a:hover {
     border: 1px solid var(--border);
     border-radius: 20px;
     background: var(--qr-bg);
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, .25), 0 18px 40px -22px rgba(0, 0, 0, .85), inset 0 0 30px -8px var(--qr-frame);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .25), 0 18px 40px -22px rgba(0, 0, 0, .85);
     cursor: zoom-in;
     line-height: 0;
 }
